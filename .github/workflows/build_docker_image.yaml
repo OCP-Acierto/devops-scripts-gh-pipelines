@@ -1,0 +1,51 @@
+name: Build Docker Image
+on:
+  workflow_call:
+    inputs:
+      project_code:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      gcp_registry:
+        required: true
+        type: string
+      gcp_repository:
+        required: true
+        type: string
+env:
+  PROJECT_CODE: ${{ inputs.project_code }}
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  GCP_REGISTRY: ${{ inputs.gcp_registry }}
+  GCP_REPOSITORY: ${{ inputs.gcp_repository }}
+jobs:
+  build:
+    name: Build & Push image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure GCP Credentials
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GCP_CDM_REGISTRY_SA_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: internal-cdm
+
+      - name: Configure Docker Credentials
+        run: |
+          gcloud auth configure-docker --quiet
+
+      - name: Build, tag, and push image to GCP GCR
+        run: |
+          docker build \
+            --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG} \
+            --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest .
+
+          docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}
+          docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest
