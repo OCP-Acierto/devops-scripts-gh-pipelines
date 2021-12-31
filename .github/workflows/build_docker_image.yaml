@@ -14,6 +14,9 @@ on:
       gcp_repository:
         required: true
         type: string
+    secrets:
+      gcp_cdm_registry_sa_credentials:
+        required: true
 env:
   PROJECT_CODE: ${{ inputs.project_code }}
   IMAGE_TAG: ${{ inputs.image_tag }}
@@ -30,7 +33,7 @@ jobs:
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v0
         with:
-          credentials_json: ${{ secrets.GCP_CDM_REGISTRY_SA_CREDENTIALS }}
+          credentials_json: ${{ secrets.gcp_cdm_registry_sa_credentials }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
@@ -49,3 +52,4 @@ jobs:
 
           docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}
           docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest
+
