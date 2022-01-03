@@ -1,0 +1,91 @@
+name: Deploy to K8s
+on:
+  workflow_call:
+    inputs:
+      project_code:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      gcp_registry:
+        required: true
+        type: string
+      gcp_repository:
+        required: true
+        type: string
+      deploy_env:
+        required: true
+        type: string
+      k8s_cluster_zone:
+        required: true
+        type: string
+      gcp_project:
+        required: true
+        type: string
+      gke_cluster_name:
+        required: true
+        type: string
+    secrets:
+      gcp_adm_k8s_sa_credentials:
+        required: true
+env:
+  PROJECT_CODE: ${{ inputs.project_code }}
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  GCP_REGISTRY: ${{ inputs.gcp_registry }}
+  GCP_REPOSITORY: ${{ inputs.gcp_repository }}
+  DEPLOY_ENV: ${{ inputs.deploy_env }}
+  K8S_CLUSTER_ZONE: ${{ inputs.k8s_cluster_zone }}
+  GCP_PROJECT: ${{ inputs.gcp_project }}
+  GKE_CLUSTER_NAME: ${{ inputs.gke_cluster_name }}
+jobs:
+  deploy_to_k8s:
+    needs: [build]
+    name: Deploy to K8s
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: main
+
+      - name: Checkout config-management repo
+        uses: actions/checkout@v2
+        with:
+          repository: OCP-Acierto/shared-config-management
+          token: ${{ secrets.GH_PULL_REPO_PAT }}
+          path: config-management
+
+      - name: Checkout kubernetes repo
+        uses: actions/checkout@v2
+        with:
+          repository: OCP-Acierto/devops-scripts-k8s
+          token: ${{ secrets.GH_PULL_REPO_PAT }}
+          path: k8s
+
+      - name: Configure GCP Credentials
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.gcp_adm_k8s_sa_credentials }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: "${{ env.GCP_PROJECT }}"
+
+      - name: Configure GKE Credentials
+        run: |
+          gcloud container clusters \
+              get-credentials "${GKE_CLUSTER_NAME}" \
+              --zone "${K8S_CLUSTER_ZONE}" \
+              --project "${GCP_PROJECT}"
+
+      - name: Deploy to k8s
+        run: |        
+          kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/service.yaml
+          kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/autoscaling.yaml
+          kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/deployment.yaml)
+
+          kubectl rollout restart deployment ${PROJECT_CODE}
+          kubectl rollout status deployment ${PROJECT_CODE} --timeout=90s
+          kubectl get pods | grep ${PROJECT_CODE}
