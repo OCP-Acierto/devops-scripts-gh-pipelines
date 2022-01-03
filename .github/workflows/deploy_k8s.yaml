@@ -31,6 +31,8 @@ on:
     secrets:
       gcp_adm_k8s_sa_credentials:
         required: true
+      gh_pull_repo_pat:
+        required: true
 env:
   PROJECT_CODE: ${{ inputs.project_code }}
   IMAGE_TAG: ${{ inputs.image_tag }}
