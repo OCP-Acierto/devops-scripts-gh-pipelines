@@ -24,7 +24,6 @@ env:
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
 jobs:
   build:
-    name: Build & Push image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
