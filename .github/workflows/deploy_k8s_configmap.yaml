@@ -31,8 +31,6 @@ on:
         required: true
       gh_pull_repo_pat:
         required: true
-      secrets_all:
-        required: true
 env:
   PROJECT_CODE: ${{ inputs.project_code }}
   DEPLOY_ENV: ${{ inputs.deploy_env }}
@@ -42,7 +40,6 @@ env:
   SECRET_FILTER: ${{ inputs.secret_filter }}
   SECRET_SUFFIX: ${{ inputs.secret_suffix }}
   CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
-  SECRETS_ALL: ${{ secrets.secrets_all }}
 jobs:
   update_configmaps_secrets:
     runs-on: ubuntu-latest
@@ -69,13 +66,19 @@ jobs:
           gcloud container clusters get-credentials "${GKE_CLUSTER_NAME}" \
               --zone "${K8S_CLUSTER_ZONE}" --project "${GCP_PROJECT}"
 
-      - name: DEBUG
-        run: |
-          env
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: eu-west-1
 
-      - name: SECRETS
+      - name: Add Secrets to ENV
         run: |
-          echo ${SECRETS_ALL}
+          for secret in $(aws secretsmanager list-secrets --output json | jq .SecretList[].Name -r | grep 'pre/crm'); do
+            value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
+            echo "export ${array[1]^^}_${array[0]^^}_${array[2]^^}=value"
+          done
 
 #      - name: Update Secrets
 #        run: |
@@ -99,3 +102,4 @@ jobs:
 #                -o yaml --dry-run=client \
 #            | kubectl apply -f -
 #          done
+#
