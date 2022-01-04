@@ -1,0 +1,58 @@
+name: Deploy to K8s
+on:
+  workflow_call:
+    inputs:
+      project_code:
+        required: true
+        type: string
+      k8s_cluster_zone:
+        required: true
+        type: string
+      gcp_project:
+        required: true
+        type: string
+      gke_cluster_name:
+        required: true
+        type: string
+    secrets:
+      gcp_adm_k8s_sa_credentials:
+        required: true
+      gh_pull_repo_pat:
+        required: true
+env:
+  PROJECT_CODE: ${{ inputs.project_code }}
+  K8S_CLUSTER_ZONE: ${{ inputs.k8s_cluster_zone }}
+  GCP_PROJECT: ${{ inputs.gcp_project }}
+  GKE_CLUSTER_NAME: ${{ inputs.gke_cluster_name }}
+jobs:
+  deploy_to_k8s:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kubernetes repo
+        uses: actions/checkout@v2
+        with:
+          repository: OCP-Acierto/devops-scripts-k8s
+          token: ${{ secrets.GH_PULL_REPO_PAT }}
+          path: k8s
+
+      - name: Configure GCP Credentials
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.gcp_adm_k8s_sa_credentials }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: "${{ env.GCP_PROJECT }}"
+
+      - name: Configure GKE Credentials
+        run: |
+          gcloud container clusters get-credentials "${GKE_CLUSTER_NAME}" \
+              --zone "${K8S_CLUSTER_ZONE}" --project "${GCP_PROJECT}"
+
+      - name: Deploy to k8s
+        run: |        
+          echo "[INFO] Apply migrations and DB update using POD ${POD}"
+          POD=$(kubectl get pods | grep "${PROJECT_CODE}" | grep "Running" | awk '{print $1}' | head -n1)
+          kubectl exec -t "${POD}" --container "fpm" -- /bin/bash -e -c "/usr/bin/php /app/artisan migrate"
+          kubectl exec -t "${POD}" --container "fpm" -- /bin/bash -e -c "/usr/bin/php /app/artisan db:update"

@@ -1,0 +1,91 @@
+name: Update Configmaps & Secrets
+on:
+  workflow_call:
+    inputs:
+      project_code:
+        required: true
+        type: string
+      deploy_env:
+        required: true
+        type: string
+      k8s_cluster_zone:
+        required: true
+        type: string
+      gcp_project:
+        required: true
+        type: string
+      gke_cluster_name:
+        required: true
+        type: string
+      configmap_array:
+        required: true
+        type: string
+      secret_filter:
+        required: true
+        type: string
+      secret_suffix:
+        required: true
+        type: string
+    secrets:
+      gcp_adm_k8s_sa_credentials:
+        required: true
+      gh_pull_repo_pat:
+        required: true
+env:
+  PROJECT_CODE: ${{ inputs.project_code }}
+  DEPLOY_ENV: ${{ inputs.deploy_env }}
+  K8S_CLUSTER_ZONE: ${{ inputs.k8s_cluster_zone }}
+  GCP_PROJECT: ${{ inputs.gcp_project }}
+  GKE_CLUSTER_NAME: ${{ inputs.gke_cluster_name }}
+  SECRET_FILTER: ${{ inputs.secret_filter }}
+  SECRET_SUFFIX: ${{ inputs.secret_suffix }}
+  CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
+jobs:
+  update_configmaps_secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout config-management repo
+        uses: actions/checkout@v2
+        with:
+          repository: OCP-Acierto/shared-config-management
+          token: ${{ secrets.GH_PULL_REPO_PAT }}
+          path: config-management
+
+      - name: Configure GCP Credentials
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.gcp_adm_k8s_sa_credentials }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: "${{ env.GCP_PROJECT }}"
+
+      - name: Configure GKE Credentials
+        run: |
+          gcloud container clusters get-credentials "${GKE_CLUSTER_NAME}" \
+              --zone "${K8S_CLUSTER_ZONE}" --project "${GCP_PROJECT}"
+
+      - name: Update Secrets
+        run: |         
+          kubectl create secret generic \
+              "${PROJECT_CODE}-credentials" \
+              --from-env-file <( env | grep -i "${SECRET_FILTER}_${SECRET_SUFFIX}_" ) \
+              -o yaml --dry-run=client \
+          | kubectl apply -f -
+
+      - name: Update Configmaps
+        run: |
+          COUNTER=$(echo "${CONFIGMAP_ARRAY}" | jq '. | length')
+
+          for ((i=1;i<=COUNTER;i++)); do
+            
+            CONFIG_CODE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_code")
+            CONFIG_FILE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_file")
+            CONFIG_PATH=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_path")
+
+            kubectl create configmap "${PROJECT_CODE}-${CONFIG_CODE}" \
+                --from-literal=${CONFIG_FILE}="./config-management/${DEPLOY_ENV}/${CONFIG_PATH}" \
+                -o yaml --dry-run=client \
+            | kubectl apply -f -
+          done
