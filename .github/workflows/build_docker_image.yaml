@@ -2,26 +2,29 @@ name: Build Docker Image
 on:
   workflow_call:
     inputs:
-      project_code:
-        required: true
-        type: string
       image_tag:
+        default: 'latest'
         required: true
         type: string
       gcp_registry:
+        default: 'eu.gcr.io/internal-cdm/builds'
         required: true
         type: string
       gcp_repository:
+        required: true
+        type: string
+      docker_file:
+        default: 'Dockerfile'
         required: true
         type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
 env:
-  PROJECT_CODE: ${{ inputs.project_code }}
   IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
+  DOCKER_FILE: ${{ inputs.docker_file }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,7 +50,8 @@ jobs:
         run: |
           docker build \
             --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest .
+            --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest 
+            -- file ${DOCKER_FILE}.
 
           docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}
           docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest
