@@ -76,9 +76,9 @@ jobs:
 
       - name: Update Configmaps
         run: |
-          COUNTER=$(echo "${CONFIGMAP_ARRAY}" | jq '. | length')
+          COUNTER="$(echo ${CONFIGMAP_ARRAY} | jq -r '. | length')"
 
-          for ((i=1;i<=COUNTER;i++)); do
+          for ((i=0;i<COUNTER;i++)); do
             
             CONFIG_CODE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_code")
             CONFIG_FILE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_file")
