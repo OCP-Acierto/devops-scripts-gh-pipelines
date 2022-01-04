@@ -50,8 +50,8 @@ jobs:
         run: |
           docker build \
             --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest 
-            -- file ${DOCKER_FILE}.
+            --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest \
+            --file ${DOCKER_FILE}.
 
           docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}
           docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest
