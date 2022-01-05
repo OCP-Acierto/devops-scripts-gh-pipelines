@@ -12,6 +12,7 @@ on:
         required: true
         type: string
       k8s_cluster_zone:
+        default: europe-west1-b
         required: true
         type: string
       gcp_project:

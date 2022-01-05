@@ -1,8 +1,14 @@
-name: Update Database with Artisan
+name: Deploy to K8s
 on:
   workflow_call:
     inputs:
       project_code:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      deploy_env:
         required: true
         type: string
       k8s_cluster_zone:
@@ -15,6 +21,9 @@ on:
       gke_cluster_name:
         required: true
         type: string
+      workers_array:
+        required: true
+        type: string
     secrets:
       gcp_adm_k8s_sa_credentials:
         required: true
@@ -22,9 +31,12 @@ on:
         required: true
 env:
   PROJECT_CODE: ${{ inputs.project_code }}
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  DEPLOY_ENV: ${{ inputs.deploy_env }}
   K8S_CLUSTER_ZONE: ${{ inputs.k8s_cluster_zone }}
   GCP_PROJECT: ${{ inputs.gcp_project }}
   GKE_CLUSTER_NAME: ${{ inputs.gke_cluster_name }}
+  WORKERS_ARRAY: ${{ inputs.workers_array }}
 jobs:
   deploy_to_k8s:
     runs-on: ubuntu-latest
@@ -52,8 +64,17 @@ jobs:
               --zone "${K8S_CLUSTER_ZONE}" --project "${GCP_PROJECT}"
 
       - name: Deploy to k8s
-        run: |        
-          echo "[INFO] Apply migrations and DB update using POD ${POD}"
-          POD=$(kubectl get pods | grep "${PROJECT_CODE}" | grep "Running" | awk '{print $1}' | head -n1)
-          kubectl exec -t "${POD}" --container "fpm" -- /bin/bash -e -c "/usr/bin/php /app/artisan migrate"
-          kubectl exec -t "${POD}" --container "fpm" -- /bin/bash -e -c "/usr/bin/php /app/artisan db:update"
+        run: |
+
+        
+          for worker in $(echo ${WORKERS_ARRAY} | jq -r .[].worker_name); do
+
+            worker_name="${PROJECT_CODE}-${worker}"
+            kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${worker_name}/service.yaml
+            kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${worker_name}/autoscaling.yaml
+            kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${worker_name}/deployment.yaml)
+
+            kubectl rollout restart deployment ${worker_name}
+            kubectl rollout status deployment ${worker_name} --timeout=90s
+            kubectl get pods | grep ${worker_name}            
+          done
