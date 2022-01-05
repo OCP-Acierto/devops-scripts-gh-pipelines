@@ -81,7 +81,9 @@ jobs:
         run: |
           for secret in $(aws secretsmanager list-secrets --output json | jq .SecretList[].Name -r | grep 'pre/crm'); do
             value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
-            echo "export ${array[1]^^}_${array[0]^^}_${array[2]^^}=value"
+
+            IFS='/' read -r -a env_name <<< "$secret"
+            echo "export ${env_name[1]^^}_${env_name[0]^^}_${env_name[2]^^}=${value}"
           done
 
 #      - name: Update Secrets
