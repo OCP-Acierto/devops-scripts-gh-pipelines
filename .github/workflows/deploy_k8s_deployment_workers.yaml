@@ -70,7 +70,6 @@ jobs:
           for worker in $(echo ${WORKERS_ARRAY} | jq -r .[].worker_name); do
 
             worker_name="${PROJECT_CODE}-${worker}"
-            kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${worker_name}/service.yaml
             kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${worker_name}/autoscaling.yaml
             kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${worker_name}/deployment.yaml)
 
