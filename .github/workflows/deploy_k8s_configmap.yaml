@@ -77,7 +77,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
           aws-region: eu-west-1
 
-      - name: Add Secrets to ENV
+      - name: Update Secrets
         run: |
           for secret in $(aws secretsmanager list-secrets --output json | jq .SecretList[].Name -r | grep "${SECRET_SUFFIX^}/${SECRET_FILTER,,}"); do
             value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
@@ -86,34 +86,23 @@ jobs:
             echo "${env_name[1]^^}_${env_name[0]^^}_${env_name[2]^^}=\"${value}\"" >> $GITHUB_ENV
           done
 
-      - name: Add Secrets to ENV
-        run: |
-          echo "TEST 1"
-          env
-          echo "TEST 2"
-          echo ${GITHUB_ENV}
-          echo "TEST 3"
-          echo "${{ env }}"
+          kubectl create secret generic \
+              "${PROJECT_CODE}-credentials" \
+              --from-env-file <( env | grep -i "${SECRET_FILTER}_${SECRET_SUFFIX}_" ) \
+              -o yaml --dry-run=client \
+          | kubectl apply -f -
 
-#      - name: Update Secrets
-#        run: |
-#          kubectl create secret generic \
-#              "${PROJECT_CODE}-credentials" \
-#              --from-env-file <( env | grep -i "${SECRET_FILTER}_${SECRET_SUFFIX}_" ) \
-#              -o yaml --dry-run=client \
-#          | kubectl apply -f -
-#
-#      - name: Update Configmaps
-#        run: |
-#          COUNTER="$(echo ${CONFIGMAP_ARRAY} | jq -r '. | length')"
-#
-#          for ((i=0;i<COUNTER;i++)); do
-#            CONFIG_CODE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_code")
-#            CONFIG_FILE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_file")
-#            CONFIG_PATH=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_path")
-#
-#            kubectl create configmap "${PROJECT_CODE}-${CONFIG_CODE}" \
-#                --from-literal=${CONFIG_FILE}="$(cat ./config-management/${DEPLOY_ENV}/${CONFIG_PATH})" \
-#                -o yaml --dry-run=client \
-#            | kubectl apply -f -
-#          done
+      - name: Update Configmaps
+        run: |
+          COUNTER="$(echo ${CONFIGMAP_ARRAY} | jq -r '. | length')"
+
+          for ((i=0;i<COUNTER;i++)); do
+            CONFIG_CODE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_code")
+            CONFIG_FILE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_file")
+            CONFIG_PATH=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_path")
+
+            kubectl create configmap "${PROJECT_CODE}-${CONFIG_CODE}" \
+                --from-literal=${CONFIG_FILE}="$(cat ./config-management/${DEPLOY_ENV}/${CONFIG_PATH})" \
+                -o yaml --dry-run=client \
+            | kubectl apply -f -
+          done
