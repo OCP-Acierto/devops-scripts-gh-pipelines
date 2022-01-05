@@ -65,8 +65,6 @@ jobs:
 
       - name: Deploy to k8s
         run: |
-
-        
           for worker in $(echo ${WORKERS_ARRAY} | jq -r .[].worker_name); do
 
             worker_name="${PROJECT_CODE}-${worker}"
