@@ -17,6 +17,10 @@ on:
         default: 'Dockerfile'
         required: true
         type: string
+      docker_build_args:
+        default: ''
+        required: false
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
@@ -25,6 +29,7 @@ env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   DOCKER_FILE: ${{ inputs.docker_file }}
+  DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -49,6 +54,7 @@ jobs:
       - name: Build, tag, and push image to GCP GCR
         run: |
           docker build \
+            ${DOCKER_BUILD_ARGS} \
             --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG} \
             --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
