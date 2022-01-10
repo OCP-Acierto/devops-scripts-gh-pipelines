@@ -24,6 +24,8 @@ on:
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
+      gh_composer_pat:
+        required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
@@ -54,6 +56,7 @@ jobs:
       - name: Build, tag, and push image to GCP GCR
         run: |
           docker build \
+            --build-arg GH_COMPOSER_PAT="${{ secrets.gh_composer_pat }}" \
             ${DOCKER_BUILD_ARGS} \
             --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG} \
             --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest \
@@ -61,4 +64,3 @@ jobs:
 
           docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}
           docker push ${GCP_REGISTRY}/${GCP_REPOSITORY}:latest
-
