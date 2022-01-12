@@ -79,6 +79,9 @@ jobs:
 
       - name: Upload Static Files to GCP CDN
         run: |
+          ls -lath *
+          ls -lath cdn/*
+
           EXCLUDE=".*\.php$"
           CACHE_CONTROL="Cache-Control:public,max-age=3600"
           echo "[INFO] Rsync ${PROJECT_PATH} to ${GCP_CDN_PATH}"
