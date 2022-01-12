@@ -32,6 +32,7 @@ env:
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   GCP_CDN_PATH: ${{ inputs.gcp_cdn_path }}
   GCP_PROJECT: ${{ inputs.gcp_project }}
+  PROJECT_PATH: cdn
 jobs:
   job:
     runs-on: ubuntu-latest
@@ -55,10 +56,6 @@ jobs:
 
       - name: Get Static Files From docker image
         run: |
-          PROJECT_PATH='cdn'
-          EXCLUDE=".*\.php$"
-          CACHE_CONTROL="Cache-Control:public,max-age=3600"
-
           echo "[INFO] Create docker container for CDN from TAG '${IMAGE_TAG}'"
           CONTAINER_ID=$(docker create "${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}")
 
@@ -82,7 +79,10 @@ jobs:
 
       - name: Upload Static Files to GCP CDN
         run: |
+          EXCLUDE=".*\.php$"
+          CACHE_CONTROL="Cache-Control:public,max-age=3600"
           echo "[INFO] Rsync ${PROJECT_PATH} to ${GCP_CDN_PATH}"
+
           # -m option, perform a parallel (multi-threaded/multi-processing)
           gsutil -m -h "${CACHE_CONTROL}" \
           rsync -r -d -x "${EXCLUDE}" "${PROJECT_PATH}/html" "${GCP_CDN_PATH}"
