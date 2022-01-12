@@ -46,7 +46,7 @@ env:
   SECRET_SUFFIX: ${{ inputs.secret_suffix }}
   CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
 jobs:
-  update_configmaps_secrets:
+  job:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout config-management repo

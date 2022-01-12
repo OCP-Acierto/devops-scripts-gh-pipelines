@@ -38,7 +38,7 @@ env:
   GKE_CLUSTER_NAME: ${{ inputs.gke_cluster_name }}
   WORKERS_ARRAY: ${{ inputs.workers_array }}
 jobs:
-  deploy_to_k8s:
+  job:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout kubernetes repo

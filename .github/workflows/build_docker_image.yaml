@@ -33,7 +33,7 @@ env:
   DOCKER_FILE: ${{ inputs.docker_file }}
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
 jobs:
-  build:
+  job:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
