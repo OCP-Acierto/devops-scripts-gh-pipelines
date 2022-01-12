@@ -1,0 +1,81 @@
+name: Build Docker Image
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        default: 'latest'
+        required: true
+        type: string
+      gcp_registry:
+        default: 'eu.gcr.io/internal-cdm/builds'
+        required: true
+        type: string
+      gcp_repository:
+        required: true
+        type: string
+      gcp_cdn_path:
+        default: ''
+        required: true
+        type: string
+    secrets:
+      gcp_cdm_registry_sa_credentials:
+        required: true
+env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  GCP_REGISTRY: ${{ inputs.gcp_registry }}
+  GCP_REPOSITORY: ${{ inputs.gcp_repository }}
+  GCP_CDN_PATH: ${{ inputs.gcp_cdn_path }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure GCP Credentials
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.gcp_cdm_registry_sa_credentials }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: internal-cdm
+
+      - name: Configure Docker Credentials
+        run: |
+          gcloud auth configure-docker --quiet
+
+      - name: Get Static Files From docker image
+        run: |
+          PROJECT_PATH='cdn'
+          EXCLUDE=".*\.php$"
+          CACHE_CONTROL="Cache-Control:public,max-age=3600"
+
+          echo "[INFO] Create docker container for CDN from TAG '${IMAGE_TAG}'"
+          CONTAINER_ID=$(docker create "${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}")
+
+          echo "[INFO] Copy contents from CDN image to project directory ${PROJECT_PATH}"
+          docker cp ${CONTAINER_ID}:/app/html ${PROJECT_PATH}/
+
+          echo "[INFO] Remove docker container for CDN"
+          docker rm "${CONTAINER_ID}"
+
+      - name: Get Static Files From docker image
+        run: |
+            ls lah cdn/*
+
+#          gcloud auth activate-service-account \
+#                "storage-administration@production-cdm.iam.gserviceaccount.com" \
+#                --key-file "/opt/service_account/storage-administration@production-cdm.json" \
+#                --project "production-cdm"
+#
+#          gcloud config set project "${GCLOUD_PROJECT}"
+#
+#          echo "[INFO] Rsync ${PROJECT_PATH} to ${GCP_CDN_PATH}"
+#          # -m option, perform a parallel (multi-threaded/multi-processing)
+#          gsutil -m -h "${CACHE_CONTROL}" \
+#          rsync -r -d -x "${EXCLUDE}" "${PROJECT_PATH}/html" "${GCP_CDN_PATH}"
+#
+#          echo "[INFO] CDN Stats"
+#          gsutil du -sch "${GCP_CDN_PATH}"
