@@ -68,13 +68,13 @@ jobs:
           echo "[INFO] Remove docker container for CDN"
           docker rm "${CONTAINER_ID}"
 
-      - name: Configure GCP Credentials
+      - name: Configure GCP Credentials only for production-cdm
         uses: google-github-actions/auth@v0
         if: ${{ env.gcp_project == 'production-cdm' }}
         with:
           credentials_json: ${{ secrets.gcp_storage_prod_sa_credentials }}
 
-      - name: Set up Cloud SDK
+      - name: Set up Cloud SDK only for production-cdm
         uses: google-github-actions/setup-gcloud@v0
         if: ${{ env.gcp_project == 'production-cdm' }}
         with:
@@ -82,5 +82,10 @@ jobs:
 
       - name: Upload Static Files to GCP CDN
         run: |
+          echo "[INFO] Rsync ${PROJECT_PATH} to ${GCP_CDN_PATH}"
+          # -m option, perform a parallel (multi-threaded/multi-processing)
+          gsutil -m -h "${CACHE_CONTROL}" \
+          rsync -r -d -x "${EXCLUDE}" "${PROJECT_PATH}/html" "${GCP_CDN_PATH}"
+
           echo "[INFO] CDN Stats"
           gsutil du -sch "${GCP_CDN_PATH}"
