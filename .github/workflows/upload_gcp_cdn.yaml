@@ -88,7 +88,7 @@ jobs:
 
           # -m option, perform a parallel (multi-threaded/multi-processing)
           gsutil -m -h "${CACHE_CONTROL}" \
-          rsync -r -d -x "${EXCLUDE}" "${PROJECT_PATH}/html" "${GCP_CDN_PATH}"
+          rsync -r -d -x "${EXCLUDE}" "${PROJECT_PATH}" "${GCP_CDN_PATH}"
 
           echo "[INFO] CDN Stats"
           gsutil du -sch "${GCP_CDN_PATH}"
