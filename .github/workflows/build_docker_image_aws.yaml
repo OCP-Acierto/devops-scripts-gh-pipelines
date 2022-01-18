@@ -1,0 +1,93 @@
+name: Build Docker Image
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        default: 'latest'
+        required: true
+        type: string
+      aws_registry_prod:
+        default: ''
+        required: true
+        type: string
+      aws_registry_non_prod:
+        default: ''
+        required: true
+        type: string
+      aws_repository:
+        required: true
+        type: string
+      docker_file:
+        default: 'Dockerfile'
+        required: true
+        type: string
+      docker_build_args:
+        default: ''
+        required: false
+        type: string
+    secrets:
+      aws_access_key_id_non_prod:
+        required: true
+      aws_secret_access_key_non_prod:
+        required: false
+      aws_access_key_id_prod:
+        required: true
+      aws_secret_access_key_prod:
+        required: false
+env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
+  AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry_non_prod }}
+  AWS_REPOSITORY: ${{ inputs.aws_repository }}
+  DOCKER_FILE: ${{ inputs.docker_file }}
+  DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+
+      - name: Configure AWS Credentials PROD
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id_prod }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_prod }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR PROD
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+
+      - name: Build & tag image to AWS ECR
+        run: |
+          docker build \
+            ${DOCKER_BUILD_ARGS} \
+            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
+            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
+            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
+            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
+            --file ${DOCKER_FILE} .
+
+      - name: Push image to AWS ECR PROD
+        run: |
+          docker push ${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY}/${AWS_REPOSITORY}:latest
+
+      - name: Configure AWS Credentials NON-PROD
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR NON-PROD
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push image to AWS ECR NON-PROD
+        run: |
+          docker push ${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY}/${AWS_REPOSITORY}:latest
