@@ -48,7 +48,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-
       - name: Configure AWS Credentials PROD
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -57,7 +56,9 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR PROD
-        uses: aws-actions/amazon-ecr-login@v1
+        run: |
+          aws ecr get-login-password --region eu-west-1 |
+          docker login --username AWS --password-stdin ${AWS_REGISTRY_PROD}
 
       - name: Build & tag image to AWS ECR
         run: |
@@ -82,7 +83,9 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR NON-PROD
-        uses: aws-actions/amazon-ecr-login@v1
+        run: |
+          aws ecr get-login-password --region eu-west-1 |
+          docker login --username AWS --password-stdin ${AWS_REGISTRY_NON_PROD}
 
       - name: Push image to AWS ECR NON-PROD
         run: |
