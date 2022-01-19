@@ -71,8 +71,8 @@ jobs:
 
       - name: Push image to AWS ECR PROD
         run: |
-          docker push ${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY}/${AWS_REPOSITORY}:latest
+          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
 
       - name: Configure AWS Credentials NON-PROD
         uses: aws-actions/configure-aws-credentials@v1
@@ -86,5 +86,5 @@ jobs:
 
       - name: Push image to AWS ECR NON-PROD
         run: |
-          docker push ${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY}/${AWS_REPOSITORY}:latest
+          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
