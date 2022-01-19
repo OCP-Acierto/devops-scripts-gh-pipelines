@@ -56,9 +56,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR PROD
-        run: |
-          aws ecr get-login-password --region eu-west-1 |
-          docker login --username AWS --password-stdin ${AWS_REGISTRY_PROD}
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build & tag image to AWS ECR
         run: |
@@ -83,9 +81,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR NON-PROD
-        run: |
-          aws ecr get-login-password --region eu-west-1 |
-          docker login --username AWS --password-stdin ${AWS_REGISTRY_NON_PROD}
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push image to AWS ECR NON-PROD
         run: |
