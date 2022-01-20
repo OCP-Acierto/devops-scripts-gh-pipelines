@@ -80,7 +80,6 @@ jobs:
 
       - name: Update Secrets
         run: |
-
           touch env_file
           for secret in $(aws secretsmanager list-secrets --output json | jq .SecretList[].Name -r | grep "${SECRET_SUFFIX,,}/${SECRET_FILTER,,}"); do
             value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
