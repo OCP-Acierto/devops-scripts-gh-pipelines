@@ -56,4 +56,4 @@ jobs:
           CONTAINER_ID=$(docker create "${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}")
           docker cp ${CONTAINER_ID}:${CONTAINER_PATH} s3_cloudfront
 
-          aws s3 cp --recurse s3_cloudfront ${AWS_S3_CLOUDFRONT}
+          aws s3 cp s3_cloudfront ${AWS_S3_CLOUDFRONT} --recurse
