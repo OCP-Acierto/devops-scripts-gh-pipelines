@@ -1,0 +1,59 @@
+name: Upload to S3 CloudFront
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        default: 'latest'
+        required: true
+        type: string
+      aws_registry:
+        default: ''
+        required: true
+        type: string
+      aws_repository:
+        required: true
+        type: string
+      container_path:
+        default: ''
+        required: true
+        type: string
+      aws_s3_cloudfront:
+        default: ''
+        required: true
+        type: string
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: false
+env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  AWS_REGISTRY: ${{ inputs.aws_registry }}
+  AWS_REPOSITORY: ${{ inputs.aws_repository }}
+  CONTAINER_PATH: ${{ inputs.container_path }}
+  AWS_S3_CLOUDFRONT: ${{ inputs.aws_s3_cloudfront }}
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials NON-PROD
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR NON-PROD
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Get Static Files From docker image
+        run: |
+          echo "[INFO] Copy contents from image to S3 CloudFront"
+
+          CONTAINER_ID=$(docker create "${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}")
+          docker cp ${CONTAINER_ID}:${CONTAINER_PATH} s3_cloudfront
+
+          s3 cp --recurse s3_cloudfront ${AWS_S3_CLOUDFRONT}
