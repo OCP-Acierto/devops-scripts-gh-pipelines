@@ -2,6 +2,9 @@ name: Deploy to K8s
 on:
   workflow_call:
     inputs:
+      image_tag:
+        required: true
+        type: string
       project_code:
         required: true
         type: string
@@ -23,6 +26,7 @@ on:
       gh_pull_repo_pat:
         required: true
 env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
   PROJECT_CODE: ${{ inputs.project_code }}
   DEPLOY_ENV: ${{ inputs.deploy_env }}
   EKS_CLUSTER_NAME: ${{ inputs.eks_cluster_name }}
