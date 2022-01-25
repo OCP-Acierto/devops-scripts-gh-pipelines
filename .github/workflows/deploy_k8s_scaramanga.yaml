@@ -8,6 +8,13 @@ on:
       deploy_env:
         required: true
         type: string
+      eks_cluster_name:
+        required: true
+        type: string
+      eks_cluster_zone:
+        default: eu-west-1
+        required: true
+        type: string
     secrets:
       aws_access_key_id:
         required: true
@@ -18,6 +25,8 @@ on:
 env:
   PROJECT_CODE: ${{ inputs.project_code }}
   DEPLOY_ENV: ${{ inputs.deploy_env }}
+  EKS_CLUSTER_NAME: ${{ inputs.eks_cluster_name }}
+  EKS_CLUSTER_ZONE: ${{ inputs.eks_cluster_zone }}
 jobs:
   job:
     runs-on: ubuntu-latest
@@ -38,7 +47,7 @@ jobs:
 
       - name: Configure EKS Credentials
         run: |
-          aws eks update-kubeconfig --name ${PROJECT_CODE}
+          aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
 
       - name: Update Secrets
         run: |
