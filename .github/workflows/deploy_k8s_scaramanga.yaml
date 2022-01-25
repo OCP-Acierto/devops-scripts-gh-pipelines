@@ -1,0 +1,66 @@
+name: Deploy to K8s
+on:
+  workflow_call:
+    inputs:
+      project_code:
+        required: true
+        type: string
+      deploy_env:
+        required: true
+        type: string
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+      gh_pull_repo_pat:
+        required: true
+env:
+  PROJECT_CODE: ${{ inputs.project_code }}
+  DEPLOY_ENV: ${{ inputs.deploy_env }}
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kubernetes repo
+        uses: actions/checkout@v2
+        with:
+          repository: OCP-Acierto/devops-scripts-k8s
+          token: ${{ secrets.GH_PULL_REPO_PAT }}
+          path: k8s
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Configure EKS Credentials
+        run: |
+          aws eks update-kubeconfig --name ${PROJECT_CODE}
+
+      - name: Update Secrets
+        run: |
+          touch env_file
+          for secret in $(aws secretsmanager list-secrets --output json | jq .SecretList[].Name -r | grep "${DEPLOY_ENV}/${PROJECT_CODE}"); do
+            value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
+
+            IFS='/' read -r -a env_name <<< "$secret"
+            echo "${env_name[2]^^}=${value}" >> env_file
+          done
+
+          kubectl create secret generic "${PROJECT_CODE}-credentials" \
+              --from-env-file=env_file \
+              -o yaml --dry-run=client \
+          | kubectl apply -f -
+
+      - name: Deploy to k8s
+        run: |
+          kubectl apply -f ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/service.yaml
+          kubectl apply -f ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/autoscaling.yaml
+          kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/deployment.yaml)
+
+          kubectl rollout restart deployment ${PROJECT_CODE}
+          kubectl rollout status deployment ${PROJECT_CODE} --timeout=90s
+          kubectl get pods | grep ${PROJECT_CODE}
