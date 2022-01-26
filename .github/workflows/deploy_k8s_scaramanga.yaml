@@ -63,10 +63,11 @@ jobs:
             echo "${env_name[2]^^}=${value}" >> env_file
           done
 
-          kubectl create secret generic "${PROJECT_CODE}-credentials" \
-              --from-env-file=env_file \
-              -o yaml --dry-run=client \
-          | kubectl apply -f -
+            kubectl create configmap "${PROJECT_CODE}-env" \
+                --from-literal=env_file" \
+                -o yaml --dry-run=client \
+            | kubectl apply -f -
+          done
 
       - name: Deploy to k8s
         run: |
