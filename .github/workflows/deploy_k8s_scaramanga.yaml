@@ -64,7 +64,7 @@ jobs:
           done
 
             kubectl create configmap "${PROJECT_CODE}-env" \
-                --from-literal=env_file" \
+                --from-literal=env_file \
                 -o yaml --dry-run=client \
             | kubectl apply -f -
 
