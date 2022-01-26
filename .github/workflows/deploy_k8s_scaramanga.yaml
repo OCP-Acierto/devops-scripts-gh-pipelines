@@ -53,7 +53,7 @@ jobs:
         run: |
           aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
 
-      - name: Update Secrets
+      - name: Update Configmap
         run: |
           touch env_file
           for secret in $(aws secretsmanager list-secrets --output json | jq .SecretList[].Name -r | grep "${DEPLOY_ENV}/${PROJECT_CODE}"); do
@@ -67,7 +67,6 @@ jobs:
                 --from-literal=env_file" \
                 -o yaml --dry-run=client \
             | kubectl apply -f -
-          done
 
       - name: Deploy to k8s
         run: |
