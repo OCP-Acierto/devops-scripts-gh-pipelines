@@ -55,6 +55,7 @@ jobs:
 
       - name: Build, tag, and push image to GCP GCR
         run: |
+          echo "[INFO] Run Build with ARGS ${DOCKER_BUILD_ARGS}"
           docker build \
             --build-arg GH_COMPOSER_PAT="${{ secrets.gh_composer_pat }}" \
             ${DOCKER_BUILD_ARGS} \
