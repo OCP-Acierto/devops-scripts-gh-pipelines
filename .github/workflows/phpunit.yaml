@@ -62,25 +62,24 @@ jobs:
 
       - name: PHPUnit Execution
         run: |
-          if [ -z "${PHPUNIT_MONGODB}" ]; then
-            docker run -t --rm --name mongodb ${PHPUNIT_MONGODB}
+          docker network create --driver bridge phpunit-test
+          if [ ! -z "${PHPUNIT_MONGODB}" ]; then
+            docker run -t --rm --name mongodb --network phpunit-test ${PHPUNIT_MONGODB}
           fi
         
-          if [ -z "${PHPUNIT_REDIS}" ]; then
-            docker run -t --rm --name redis ${PHPUNIT_REDIS}
+          if [ ! -z "${PHPUNIT_REDIS}" ]; then
+            docker run -t --rm --name redis --network phpunit-test ${PHPUNIT_REDIS}
           fi
 
-          docker run -t --rm --workdir "/app" \
-              -v "$(pwd)/:/app/" \
+          docker run -t --rm --workdir /app --network phpunit-test \
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/clover:/opt/clover" \
               -v "$(pwd)/config-management:/config-management" \
               "${GCP_REGISTRY}/${GCP_REPOSITORY}:latest" \
-              /bin/bash -e -c "echo 'Install PHP testing tools' && \
-              apt-get update && \
-              apt-get -qq install -y php7.3-xdebug > /dev/null && \
-              echo "Download latest /config-management/${DEPLOY_ENV}/${CONFIG_PATH}" && \
-              cat "/config-management/${DEPLOY_ENV}/${CONFIG_PATH}" > /app/.env.testing && \
+              /bin/bash -e -c "echo Install PHP testing tools && \
+              apt-get update && apt-get -qq install -y php7.3-xdebug && \
+              echo Download latest /config-management/${DEPLOY_ENV}/${CONFIG_PATH} && \
+              cat /config-management/${DEPLOY_ENV}/${CONFIG_PATH} > /app/.env.testing && \
               XDEBUG_MODE=coverage /app/vendor/bin/phpunit \
                       --log-junit /opt/jreport \
                       --coverage-clover /opt/clover \
