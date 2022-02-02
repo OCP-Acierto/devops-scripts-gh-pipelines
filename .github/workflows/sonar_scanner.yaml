@@ -1,36 +1,17 @@
-name: Build Docker Image
+name: Run sonar scanner
 on:
   workflow_call:
     inputs:
       project_code:
         required: true
         type: string
-      gcp_registry:
-        default: 'eu.gcr.io/internal-cdm/builds'
-        required: true
-        type: string
-      gcp_repository:
-        required: true
-        type: string
-      docker_file:
-        default: 'Dockerfile'
-        required: true
-        type: string
-      docker_build_args:
-        default: ''
-        required: false
-        type: string
     secrets:
-      gcp_cdm_registry_sa_credentials:
+      sonar_token:
         required: true
-      sonar_login:
-        required: false
+      sonar_host_url:
+        required: true
 env:
-  GCP_REGISTRY: ${{ inputs.gcp_registry }}
-  GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   PROJECT_CODE: ${{ inputs.project_code }}
-  SONAR_URL: https://sonar.acierto.com
-  SONAR_LOGIN: ${{ inputs.sonar_login }}
 jobs:
   job:
     runs-on: ubuntu-latest
@@ -38,34 +19,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Configure GCP Credentials
-        uses: google-github-actions/auth@v0
-        with:
-          credentials_json: ${{ secrets.gcp_cdm_registry_sa_credentials }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
-        with:
-          project_id: internal-cdm
-
-      - name: Configure Docker Credentials
-        run: |
-          gcloud auth configure-docker --quiet
-
-      - name: Sonar Scanner Execution
-        run: |
-          docker run --rm --workdir "/app" \
-              -v "$(pwd)/:/app/" \
-              -v "$(pwd)/jreport:/opt/jreport" \
-              -v "$(pwd)/clover:/opt/clover" \
-              "${GCP_REGISTRY}/${GCP_REPOSITORY}:latest" \
-              /bin/bash -e -c "/usr/bin/sonar-scanner \
-                      -Dsonar.projectKey=${PROJECT_CODE} \
-                      -Dsonar.sources=. \
-                      -Dsonar.php.tests.reportPath=/opt/jreport \
-                      -Dsonar.php.coverage.reportPaths=/opt/clover \
-                      -Dsonar.host.url=${SONAR_URL} \
-                      -Dsonar.login=${SONAR_LOGIN} \
-                      -Dsonar.sourceEncoding=UTF-8 \
-                      -Dsonar.exclusions=public/**
-                  "
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          args: >
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.verbose=true
+            -Dsonar.projectKey=${PROJECT_CODE}
+            -Dsonar.sources=.
+            -Dsonar.php.tests.reportPath=/opt/jreport
+            -Dsonar.php.coverage.reportPaths=/opt/clover
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.exclusions=public/**
