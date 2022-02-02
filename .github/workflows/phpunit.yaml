@@ -22,6 +22,8 @@ on:
         required: false
         type: string
     secrets:
+      gh_pull_repo_pat:
+        required: true
       gcp_cdm_registry_sa_credentials:
         required: true
 env:
