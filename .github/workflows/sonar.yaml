@@ -24,13 +24,15 @@ on:
       gcp_cdm_registry_sa_credentials:
         required: true
       sonar_token:
-        required: false
+        required: true
+      sonar_url:
+        required: true
 env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   PROJECT_CODE: ${{ inputs.project_code }}
-  SONAR_URL: https://sonar.acierto.com
-  SONAR_TOKEN: ${{ inputs.sonar_token }}
+  SONAR_URL: ${{ secrets.sonar_url }}
+  SONAR_TOKEN: ${{ secrets.sonar_token }}
 jobs:
   job:
     runs-on: ubuntu-latest
