@@ -35,6 +35,9 @@ jobs:
               sonar.php.coverage.reportPaths=/opt/clover
               sonar.verbose=true
           EOF
+          ls -la 
+
+          cat sonar-scanner.properties
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
