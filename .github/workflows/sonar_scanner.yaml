@@ -21,7 +21,8 @@ jobs:
 
       - name: sonar-scanner.properties  
         run: |
-          cat << EOF > sonar-scanner.properties
+          mkdir -p /opt/sonar-scanner/conf/
+          cat << EOF > /opt/sonar-scanner/conf/sonar-scanner.properties
               sonar.projectKey=${PROJECT_CODE}
               sonar.projectName=${PROJECT_CODE}
               sonar.projectVersion=1.0
@@ -35,9 +36,7 @@ jobs:
               sonar.php.coverage.reportPaths=/opt/clover
               sonar.verbose=true
           EOF
-          cp sonar-scanner.properties /opt/sonar-scanner/conf/
 
-          mkdir -p /opt/sonar-scanner/conf/
           cat /opt/sonar-scanner/conf/sonar-scanner.properties
 
       - name: SonarQube Scan
