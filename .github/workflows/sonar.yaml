@@ -23,14 +23,14 @@ on:
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
-      sonar_login:
+      sonar_token:
         required: false
 env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   PROJECT_CODE: ${{ inputs.project_code }}
   SONAR_URL: https://sonar.acierto.com
-  SONAR_LOGIN: ${{ inputs.sonar_login }}
+  SONAR_TOKEN: ${{ inputs.sonar_token }}
 jobs:
   job:
     runs-on: ubuntu-latest
@@ -65,7 +65,7 @@ jobs:
                       -Dsonar.php.tests.reportPath=/opt/jreport \
                       -Dsonar.php.coverage.reportPaths=/opt/clover \
                       -Dsonar.host.url=${SONAR_URL} \
-                      -Dsonar.login=${SONAR_LOGIN} \
+                      -Dsonar.login=${SONAR_TOKEN} \
                       -Dsonar.sourceEncoding=UTF-8 \
                       -Dsonar.exclusions=public/**
                   "
