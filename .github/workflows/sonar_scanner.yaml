@@ -21,8 +21,7 @@ jobs:
 
       - name: sonar-scanner.properties  
         run: |
-          mkdir -p /opt/sonar-scanner/conf/
-          cat << EOF > /opt/sonar-scanner/conf/sonar-scanner.properties
+          cat << EOF > sonar-scanner.properties
               sonar.projectKey=${PROJECT_CODE}
               sonar.projectName=${PROJECT_CODE}
               sonar.projectVersion=1.0
@@ -37,7 +36,7 @@ jobs:
               sonar.verbose=true
           EOF
 
-          cat /opt/sonar-scanner/conf/sonar-scanner.properties
+          cat sonar-scanner.properties
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
