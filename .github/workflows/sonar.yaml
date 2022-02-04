@@ -6,7 +6,7 @@ on:
         required: true
         type: string
       gcp_registry:
-        default: 'eu.gcr.io/internal-cdm/builds'
+        default: 'eu.gcr.io/internal-cdm/images'
         required: true
         type: string
       gcp_repository:
