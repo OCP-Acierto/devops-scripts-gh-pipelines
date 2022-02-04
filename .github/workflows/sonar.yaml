@@ -64,10 +64,11 @@ jobs:
               /bin/bash -e -c "/usr/bin/sonar-scanner \
                       -Dsonar.projectKey=${PROJECT_CODE} \
                       -Dsonar.sources=. \
-                      -Dsonar.php.tests.reportPath=/opt/jreport \
-                      -Dsonar.php.coverage.reportPaths=/opt/clover \
                       -Dsonar.host.url=${SONAR_URL} \
                       -Dsonar.login=${SONAR_TOKEN} \
                       -Dsonar.sourceEncoding=UTF-8 \
                       -Dsonar.exclusions=public/**
                   "
+
+      # -Dsonar.php.tests.reportPath=/opt/jreport \
+      #  -Dsonar.php.coverage.reportPaths=/opt/clover \
