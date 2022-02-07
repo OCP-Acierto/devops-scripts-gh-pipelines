@@ -64,11 +64,15 @@ jobs:
         run: |
           docker network create --driver bridge phpunit-test
           if [ ! -z "${PHPUNIT_MONGODB}" ]; then
-            docker run -t --rm --name mongodb --network phpunit-test ${PHPUNIT_MONGODB}
+            docker run -tid --rm --name mongodb --network phpunit-test \
+              -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
+              -e MONGO_INITDB_ROOT_PASSWORD=secret  \
+              ${PHPUNIT_MONGODB}
           fi
         
           if [ ! -z "${PHPUNIT_REDIS}" ]; then
-            docker run -t --rm --name redis --network phpunit-test ${PHPUNIT_REDIS}
+            docker run -tid --rm --name redis --network phpunit-test \
+            ${PHPUNIT_REDIS}
           fi
 
           docker run -t --rm --workdir /app --network phpunit-test \
