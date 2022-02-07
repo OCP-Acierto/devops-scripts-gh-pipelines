@@ -2,6 +2,10 @@ name: PHPUnit Test
 on:
   workflow_call:
     inputs:
+      image_tag:
+        default: 'latest'
+        required: true
+        type: string
       gcp_registry:
         default: 'eu.gcr.io/internal-cdm/builds'
         required: true
@@ -27,6 +31,7 @@ on:
       gcp_cdm_registry_sa_credentials:
         required: true
 env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   PHPUNIT_REDIS: ${{ inputs.phpunit_redis }}
@@ -64,6 +69,7 @@ jobs:
       - name: PHPUnit Execution
         run: |
           docker network create --driver bridge phpunit-test
+
           if [ ! -z "${PHPUNIT_MONGODB}" ]; then
             docker run -tid --rm --name mongodb --network phpunit-test \
               -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
@@ -80,11 +86,11 @@ jobs:
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/clover:/opt/clover" \
               -v "$(pwd)/config-management:/config-management" \
-              "${GCP_REGISTRY}/${GCP_REPOSITORY}:latest" \
+              "${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}" \
               /bin/bash -e -c "echo Install PHP testing tools && \
               apt-get update && apt-get -qq install -y php7.3-xdebug && \
-              echo Download latest /config-management/${DEPLOY_ENV}/${CONFIG_PATH} && \
-              cat /config-management/${DEPLOY_ENV}/${CONFIG_PATH} > /app/.env.testing && \
+              echo Download /config-management/${PHPUNIT_CONFIG_PATH} && \
+              cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing && \
               XDEBUG_MODE=coverage /app/vendor/bin/phpunit \
                       --log-junit /opt/jreport \
                       --coverage-clover /opt/clover \
