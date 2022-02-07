@@ -90,9 +90,9 @@ jobs:
               /bin/bash -e -c "echo Install PHP testing tools && \
               apt-get update && apt-get -qq install -y php7.3-xdebug && \
               echo Download /config-management/${PHPUNIT_CONFIG_PATH} && \
-              cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing && \
+              cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env && \
               XDEBUG_MODE=coverage /app/vendor/bin/phpunit \
-                      --log-junit /opt/jreport \
-                      --coverage-clover /opt/clover \
+                      --log-junit /opt/jreport/jreport.xml \
+                      --coverage-clover /opt/clover/clover.xml \
                       --coverage-text \
                   "
