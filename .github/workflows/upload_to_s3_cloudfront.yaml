@@ -21,6 +21,14 @@ on:
         default: ''
         required: true
         type: string
+      cloudfront_id:
+        default: ''
+        required: true
+        type: string
+      cloudfront_invalidation:
+        default: ''
+        required: true
+        type: string
     secrets:
       aws_access_key_id:
         required: true
@@ -32,6 +40,8 @@ env:
   AWS_REPOSITORY: ${{ inputs.aws_repository }}
   CONTAINER_PATH: ${{ inputs.container_path }}
   AWS_S3_CLOUDFRONT: ${{ inputs.aws_s3_cloudfront }}
+  CLOUDFRONT_ID: ${{ inputs.cloudfront_id }}
+  CLOUDFRONT_INVALIDATION: ${{ inputs.cloudfront_invalidation }}
 jobs:
   job:
     timeout-minutes: 30
@@ -58,3 +68,10 @@ jobs:
           docker cp ${CONTAINER_ID}:${CONTAINER_PATH} s3_cloudfront
 
           aws s3 cp s3_cloudfront ${AWS_S3_CLOUDFRONT} --recursive
+
+          if [ ! -z "${CLOUDFRONT_INVALIDATION}" ]; then
+            echo "[INFO] Invalidating ${CLOUDFRONT_INVALIDATION} resources for ${CLOUDFRONT_ID}"
+            aws cloudfront create-invalidation \
+              --distribution-id ${CLOUDFRONT_ID} \
+              --paths "${CLOUDFRONT_INVALIDATION}"
+          fi
