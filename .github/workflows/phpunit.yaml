@@ -34,6 +34,7 @@ env:
   PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
 jobs:
   job:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

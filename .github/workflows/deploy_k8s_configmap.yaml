@@ -47,6 +47,7 @@ env:
   CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
 jobs:
   job:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - name: Checkout config-management repo

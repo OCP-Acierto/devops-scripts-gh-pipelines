@@ -39,6 +39,7 @@ env:
   WORKERS_ARRAY: ${{ inputs.workers_array }}
 jobs:
   job:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - name: Checkout kubernetes repo

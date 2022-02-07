@@ -34,6 +34,7 @@ env:
   AWS_S3_CLOUDFRONT: ${{ inputs.aws_s3_cloudfront }}
 jobs:
   job:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

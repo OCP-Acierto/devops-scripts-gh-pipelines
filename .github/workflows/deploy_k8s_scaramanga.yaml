@@ -33,6 +33,7 @@ env:
   EKS_CLUSTER_ZONE: ${{ inputs.eks_cluster_zone }}
 jobs:
   job:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - name: Checkout kubernetes repo
