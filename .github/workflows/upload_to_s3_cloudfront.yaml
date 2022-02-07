@@ -60,7 +60,7 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Get Static Files From docker image
+      - name: Push Static Files to S3 bucket & Invalidate CloudFront Cache
         run: |
           echo "[INFO] Copy contents from image to S3 CloudFront"
 
@@ -74,4 +74,8 @@ jobs:
             aws cloudfront create-invalidation \
               --distribution-id ${CLOUDFRONT_ID} \
               --paths "${CLOUDFRONT_INVALIDATION}"
+
+            aws cloudfront list-invalidations \
+              --output json \
+              --distribution-id ${CLOUDFRONT_ID} 
           fi
