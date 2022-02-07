@@ -91,7 +91,9 @@ jobs:
               apt-get update && apt-get -qq install -y php7.3-xdebug && \
               echo Download /config-management/${PHPUNIT_CONFIG_PATH} && \
               cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env && \
+              cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing && \
               XDEBUG_MODE=coverage /app/vendor/bin/phpunit \
+                      --configuration /app/phpunit.xml
                       --log-junit /opt/jreport/jreport.xml \
                       --coverage-clover /opt/clover/clover.xml \
                       --coverage-text \
