@@ -1,4 +1,4 @@
-name: Build Docker Image
+name: Upload to GCP CDN
 on:
   workflow_call:
     inputs:
