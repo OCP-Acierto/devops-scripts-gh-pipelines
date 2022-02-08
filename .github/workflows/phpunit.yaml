@@ -42,9 +42,6 @@ jobs:
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
       - name: Checkout config-management repo
         uses: actions/checkout@v2
         with:
