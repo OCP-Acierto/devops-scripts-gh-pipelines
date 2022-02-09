@@ -34,6 +34,8 @@ on:
         required: true
       aws_secret_access_key_prod:
         required: false
+      gh_npm_registry_pat:
+        required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
@@ -63,6 +65,7 @@ jobs:
         run: |
           docker build \
             ${DOCKER_BUILD_ARGS} \
+            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
