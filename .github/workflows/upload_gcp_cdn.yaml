@@ -17,7 +17,7 @@ on:
         default: ''
         required: true
         type: string
-      gcp_project:
+      gcp_cdn_project:
         default: ''
         required: true
         type: string
@@ -31,7 +31,7 @@ env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   GCP_CDN_PATH: ${{ inputs.gcp_cdn_path }}
-  GCP_PROJECT: ${{ inputs.gcp_project }}
+  GCP_CDN_PROJECT: ${{ inputs.gcp_cdn_project }}
   PROJECT_PATH: cdn
 jobs:
   job:
@@ -65,13 +65,13 @@ jobs:
 
       - name: Configure GCP Credentials only for production-cdm
         uses: google-github-actions/auth@v0
-        if: ${{ env.GCP_PROJECT == 'production-cdm' }}
+        if: ${{ env.GCP_CDN_PROJECT == 'production-cdm' }}
         with:
           credentials_json: ${{ secrets.gcp_storage_sa_credentials }}
 
       - name: Set up Cloud SDK only for production-cdm
         uses: google-github-actions/setup-gcloud@v0
-        if: ${{ env.GCP_PROJECT == 'production-cdm' }}
+        if: ${{ env.GCP_CDN_PROJECT == 'production-cdm' }}
         with:
           project_id: production-cdm
 
