@@ -65,13 +65,13 @@ jobs:
 
       - name: Configure GCP Credentials only for production-cdm
         uses: google-github-actions/auth@v0
-        if: env.gcp_project == 'production-cdm'
+        if: ${{ env.GCP_PROJECT == 'production-cdm' }}
         with:
           credentials_json: ${{ secrets.gcp_storage_sa_credentials }}
 
       - name: Set up Cloud SDK only for production-cdm
         uses: google-github-actions/setup-gcloud@v0
-        if: env.gcp_project == 'production-cdm'
+        if: ${{ env.GCP_PROJECT == 'production-cdm' }}
         with:
           project_id: production-cdm
 
