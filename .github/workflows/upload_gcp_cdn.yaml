@@ -21,6 +21,10 @@ on:
         default: ''
         required: true
         type: string
+      project_path:
+        default: ''
+        required: true
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
@@ -32,7 +36,7 @@ env:
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   GCP_CDN_PATH: ${{ inputs.gcp_cdn_path }}
   GCP_CDN_PROJECT: ${{ inputs.gcp_cdn_project }}
-  PROJECT_PATH: cdn
+  PROJECT_PATH: ${{ inputs.project_path }}
 jobs:
   job:
     timeout-minutes: 30
@@ -57,8 +61,8 @@ jobs:
           echo "[INFO] Create docker container for CDN from TAG '${IMAGE_TAG}'"
           CONTAINER_ID=$(docker create "${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}")
 
-          echo "[INFO] Copy contents from CDN image to project directory ${PROJECT_PATH}"
-          docker cp ${CONTAINER_ID}:/app/html ${PROJECT_PATH}/
+          echo "[INFO] Copy contents from CDN image to project directory ./cdn/"
+          docker cp ${CONTAINER_ID}:${PROJECT_PATH} cdn/
 
           echo "[INFO] Remove docker container for CDN"
           docker rm "${CONTAINER_ID}"
@@ -77,14 +81,14 @@ jobs:
 
       - name: Upload Static Files to GCP CDN
         run: |
-          EXCLUDE=".*\.php$"
+          EXCLUDE=".*\.txt$|.*\.php$|.*\.config|.htaccess|$|/maquetacio|/sitemap"
           CACHE_CONTROL="Cache-Control:public,max-age=3600"
 
-          echo "[INFO] Rsync ${PROJECT_PATH} to ${GCP_CDN_PATH}"
+          echo "[INFO] Rsync cdn/ to ${GCP_CDN_PATH}"
           # -m option, perform a parallel (multi-threaded/multi-processing)
           # -q Causes gsutil to perform operations quietly
           gsutil -q -m -h "${CACHE_CONTROL}" \
-          rsync -r -d -x "${EXCLUDE}" "${PROJECT_PATH}" "${GCP_CDN_PATH}"
+          rsync -r -d -x "${EXCLUDE}" "cdn/" "${GCP_CDN_PATH}"
 
           echo "[INFO] CDN Stats"
           gsutil du -sch "${GCP_CDN_PATH}"
