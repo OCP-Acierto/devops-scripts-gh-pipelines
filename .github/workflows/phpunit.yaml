@@ -21,6 +21,10 @@ on:
         default: ''
         required: false
         type: string
+      phpunit_rabbitmq:
+        default: ''
+        required: false
+        type: string
       phpunit_config_path:
         default: ''
         required: false
@@ -36,6 +40,7 @@ env:
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   PHPUNIT_REDIS: ${{ inputs.phpunit_redis }}
   PHPUNIT_MONGODB: ${{ inputs.phpunit_mongodb }}
+  PHPUNIT_RABBITMQ: ${{ inputs.phpunit_rabbitmq }}
   PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
 jobs:
   job:
@@ -77,6 +82,11 @@ jobs:
           if [ ! -z "${PHPUNIT_REDIS}" ]; then
             docker run -tid --rm --name redis --network phpunit-test \
             ${PHPUNIT_REDIS}
+          fi
+
+          if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
+            docker run -tid --rm --name rabbitmq --network phpunit-test \
+            ${PHPUNIT_RABBITMQ}
           fi
 
           docker run -t --rm --workdir /app --network phpunit-test \
