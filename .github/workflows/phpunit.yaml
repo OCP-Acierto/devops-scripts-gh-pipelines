@@ -34,6 +34,10 @@ on:
         required: true
       gcp_cdm_registry_sa_credentials:
         required: true
+      rabbitmq_user:
+        required: false
+      rabbitmq_pass:
+        required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
@@ -85,7 +89,7 @@ jobs:
           fi
 
           if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
-            docker run -tid --rm --name rabbitmq --network phpunit-test \
+            docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }} -e RABBITMQ_DEFAULT_PASS=${{ RABBITMQ_PASS }} \
             ${PHPUNIT_RABBITMQ}
           fi
 
