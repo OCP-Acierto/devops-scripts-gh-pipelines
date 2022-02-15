@@ -89,7 +89,7 @@ jobs:
           fi
 
           if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
-            docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }} -e RABBITMQ_DEFAULT_PASS=${{ RABBITMQ_PASS }} \
+            docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }} -e RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASS }} \
             ${PHPUNIT_RABBITMQ}
           fi
 
