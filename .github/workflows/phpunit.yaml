@@ -35,9 +35,9 @@ on:
       gcp_cdm_registry_sa_credentials:
         required: true
       rabbitmq_user:
-        required: false
+        required: true
       rabbitmq_pass:
-        required: false
+        required: true
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
