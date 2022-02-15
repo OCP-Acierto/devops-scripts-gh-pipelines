@@ -75,6 +75,7 @@ jobs:
           kubectl apply -f ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/autoscaling.yaml
           kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/deployment.yaml)
 
-          kubectl rollout restart deployment ${PROJECT_CODE}
-          kubectl rollout status deployment ${PROJECT_CODE} --timeout=360s
+          #kubectl rollout restart deployment ${PROJECT_CODE}
+          #kubectl rollout status deployment ${PROJECT_CODE} --timeout=360s
+          sleep 5
           kubectl get pods | grep ${PROJECT_CODE}
