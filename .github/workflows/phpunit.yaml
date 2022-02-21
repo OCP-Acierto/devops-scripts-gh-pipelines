@@ -25,6 +25,10 @@ on:
         default: ''
         required: false
         type: string
+      phpunit_mysql:
+        default: ''
+        required: false
+        type: string
       phpunit_config_path:
         default: ''
         required: false
@@ -38,6 +42,10 @@ on:
         required: true
       rabbitmq_pass:
         required: true
+      mysql_user:
+        required: true
+      mysql_pass:
+        required: true
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
@@ -45,6 +53,7 @@ env:
   PHPUNIT_REDIS: ${{ inputs.phpunit_redis }}
   PHPUNIT_MONGODB: ${{ inputs.phpunit_mongodb }}
   PHPUNIT_RABBITMQ: ${{ inputs.phpunit_rabbitmq }}
+  PHPUNIT_MYSQL: ${{ inputs.phpunit_mysql }}
   PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
 jobs:
   job:
@@ -91,6 +100,12 @@ jobs:
           if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
             docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }} -e RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASS }} \
             ${PHPUNIT_RABBITMQ}
+          fi
+
+          5.7.37-debian
+          if [ ! -z "${PHPUNIT_MYSQL}" ]; then
+            docker run -t --rm --name mysql -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASS }} -d \
+            ${PHPUNIT_MYSQL}
           fi
 
           docker run -t --rm --workdir /app --network phpunit-test \
