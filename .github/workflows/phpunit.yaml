@@ -103,7 +103,7 @@ jobs:
           fi
 
           if [ ! -z "${PHPUNIT_MYSQL}" ]; then
-            docker run -t --rm --name mysql -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASS }} \
+            docker run -tid --rm --name mysql -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASS }} \
             ${PHPUNIT_MYSQL}
           fi
 
