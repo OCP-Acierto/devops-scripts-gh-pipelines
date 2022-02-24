@@ -29,6 +29,10 @@ on:
         default: ''
         required: false
         type: string
+      phpunit_elasticsearch:
+        default: ''
+        required: false
+        type: string
       phpunit_config_path:
         default: ''
         required: false
@@ -54,6 +58,7 @@ env:
   PHPUNIT_MONGODB: ${{ inputs.phpunit_mongodb }}
   PHPUNIT_RABBITMQ: ${{ inputs.phpunit_rabbitmq }}
   PHPUNIT_MYSQL: ${{ inputs.phpunit_mysql }}
+  PHPUNIT_ELASTICSEARCH: ${{ inputs.phpunit_elasticsearch }}
   PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
 jobs:
   job:
@@ -103,8 +108,13 @@ jobs:
           fi
 
           if [ ! -z "${PHPUNIT_MYSQL}" ]; then
-            docker run -tid --rm --name mysql -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASS }} \
+            docker run -tid --rm --name mysql --network phpunit-test -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASS }} \
             ${PHPUNIT_MYSQL}
+          fi
+
+          if [ ! -z "${PHPUNIT_ELASTICSEARCH}" ]; then
+            docker run -tid --rm --name elasticsearch --network phpunit-test -e "discovery.type=single-node" \
+            ${PHPUNIT_ELASTICSEARCH}
           fi
 
           docker run -t --rm --workdir /app --network phpunit-test \
