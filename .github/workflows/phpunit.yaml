@@ -39,13 +39,13 @@ on:
       gcp_cdm_registry_sa_credentials:
         required: true
       rabbitmq_user:
-        required: true
+        required: false
       rabbitmq_pass:
-        required: true
+        required: false
       mysql_user:
-        required: true
+        required: false
       mysql_pass:
-        required: true
+        required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
