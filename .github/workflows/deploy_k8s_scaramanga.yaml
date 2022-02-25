@@ -73,6 +73,8 @@ jobs:
         run: |
           kubectl apply -f ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/service.yaml
           kubectl apply -f ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/autoscaling.yaml
+          kubectl apply -f ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/ingress.yaml || true
+          
           STATUS=$(kubectl apply -f \
           <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/deployment.yaml))
 
