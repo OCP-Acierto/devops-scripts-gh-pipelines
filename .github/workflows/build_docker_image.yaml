@@ -15,7 +15,7 @@ on:
         type: string
       docker_file:
         default: 'Dockerfile'
-        required: true
+        required: false
         type: string
       docker_build_args:
         default: ''
