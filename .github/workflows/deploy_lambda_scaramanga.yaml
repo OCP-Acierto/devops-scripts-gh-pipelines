@@ -19,7 +19,7 @@ on:
         required: true
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
-  AWS_REGISTRY: ${{ inputs.aws_registry_prod }}
+  AWS_REGISTRY: ${{ inputs.aws_registry }}
   PROJECT_CODE: ${{ inputs.project_code }}
 jobs:
   job:
