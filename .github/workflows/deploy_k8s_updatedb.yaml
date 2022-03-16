@@ -10,7 +10,7 @@ on:
         required: true
         type: string
       gcp_project:
-        required: true
+        required: false
         type: string
       gke_cluster_name:
         required: true
