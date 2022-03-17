@@ -43,7 +43,6 @@ env:
   AWS_REPOSITORY: ${{ inputs.aws_repository }}
   DOCKER_FILE: ${{ inputs.docker_file }}
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
-  CODEARTIFACT_AUTH_TOKEN:
 jobs:
   job:
     timeout-minutes: 30
