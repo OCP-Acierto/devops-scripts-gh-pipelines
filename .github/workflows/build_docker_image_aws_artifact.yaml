@@ -36,7 +36,7 @@ on:
         required: false
       gh_npm_registry_pat:
         required: false
-      codeartifact_auth_token:
+      ocp_packages_actions_role:
         required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
