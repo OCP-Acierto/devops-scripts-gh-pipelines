@@ -55,6 +55,9 @@ jobs:
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
+        env:
+          TOKEN: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
+        if: ${{ env.TOKEN != '' }}
         with:
           role-to-assume: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
           role-session-name: githubactions
