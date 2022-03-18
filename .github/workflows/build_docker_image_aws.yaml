@@ -87,7 +87,7 @@ jobs:
           docker build \
             ${DOCKER_BUILD_ARGS} \
             --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
-            --build-arg CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN \
+            --build-arg CODEARTIFACT_AUTH_TOKEN=${{ env.CODEARTIFACT_AUTH_TOKEN }} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
