@@ -64,6 +64,9 @@ jobs:
           aws-region: eu-west-1
       
       - name: Authenticate to CodeArtifact
+        env:
+          TOKEN: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
+        if: ${{ env.TOKEN != '' }}
         run: |
           export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain bauer-ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text`
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
