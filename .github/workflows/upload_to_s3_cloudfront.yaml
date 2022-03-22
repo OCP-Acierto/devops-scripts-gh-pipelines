@@ -15,7 +15,7 @@ on:
         type: string
       container_path:
         default: ''
-        required: true
+        required: false
         type: string
       aws_s3_cloudfront:
         default: ''
