@@ -69,12 +69,22 @@ jobs:
           fi
 
           if [ ! -z "${CLOUDFRONT_INVALIDATION}" ]; then
-            echo "[INFO] Invalidating ${CLOUDFRONT_INVALIDATION} resources for ${CLOUDFRONT_ID}"
-            aws cloudfront create-invalidation \
-              --distribution-id ${CLOUDFRONT_ID} \
-              --paths "${CLOUDFRONT_INVALIDATION}"
+            FLAG=4
 
-            aws cloudfront list-invalidations \
-              --output json \
-              --distribution-id ${CLOUDFRONT_ID} 
+            if [ $1 = "E33TR4EY9MXEI0" ]; then
+              FLAG=$(kubectl rollout status deployment insurance-web-funnel-life 2>&1 | grep -i successfully | wc -l)
+            fi
+            
+            if [ $FLAG = 1 ] || [ $FLAG = 4 ]; then
+              echo "[INFO] Invalidating ${CLOUDFRONT_INVALIDATION} resources for ${CLOUDFRONT_ID}"
+              aws cloudfront create-invalidation \
+                --distribution-id ${CLOUDFRONT_ID} \
+                --paths "${CLOUDFRONT_INVALIDATION}"
+
+              aws cloudfront list-invalidations \
+                --output json \
+                --distribution-id ${CLOUDFRONT_ID} 
+            else
+              echo "DEPLOYMENT DIDN'T FINISHED YET. TRY AGAIN IN FEW MINUTES"
+            fi
           fi
