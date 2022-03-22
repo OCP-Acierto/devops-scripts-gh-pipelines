@@ -4,14 +4,14 @@ on:
     inputs:
       image_tag:
         default: 'latest'
-        required: true
+        required: false
         type: string
       aws_registry:
         default: ''
-        required: true
+        required: false
         type: string
       aws_repository:
-        required: true
+        required: false
         type: string
       container_path:
         default: ''
@@ -19,7 +19,7 @@ on:
         type: string
       aws_s3_cloudfront:
         default: ''
-        required: true
+        required: false
         type: string
       cloudfront_id:
         default: ''
@@ -59,12 +59,14 @@ jobs:
 
       - name: Push Static Files to S3 bucket & Invalidate CloudFront Cache
         run: |
-          echo "[INFO] Copy contents from image to S3 CloudFront"
+          if [ ! -z "${AWS_REPOSITORY}" ]; then
+            echo "[INFO] Copy contents from image to S3 CloudFront"
 
-          CONTAINER_ID=$(docker create "${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}")
-          docker cp ${CONTAINER_ID}:${CONTAINER_PATH} s3_cloudfront
+            CONTAINER_ID=$(docker create "${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}")
+            docker cp ${CONTAINER_ID}:${CONTAINER_PATH} s3_cloudfront
 
-          aws s3 cp s3_cloudfront ${AWS_S3_CLOUDFRONT} --recursive
+            aws s3 cp s3_cloudfront ${AWS_S3_CLOUDFRONT} --recursive
+          fi
 
           if [ ! -z "${CLOUDFRONT_INVALIDATION}" ]; then
             echo "[INFO] Invalidating ${CLOUDFRONT_INVALIDATION} resources for ${CLOUDFRONT_ID}"
