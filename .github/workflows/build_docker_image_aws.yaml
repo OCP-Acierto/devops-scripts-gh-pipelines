@@ -53,7 +53,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials OCP-ARTIFACTS
         uses: aws-actions/configure-aws-credentials@v1
         env:
           TOKEN: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
@@ -68,7 +68,7 @@ jobs:
           TOKEN: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
         if: ${{ env.TOKEN != '' }}
         run: |
-          export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain bauer-ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text`
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bauer-ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text)
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
