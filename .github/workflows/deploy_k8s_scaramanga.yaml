@@ -71,12 +71,17 @@ jobs:
 
       - name: Deploy to k8s
         run: |
-          kubectl apply -f ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/service.yaml
-          kubectl apply -f ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/autoscaling.yaml
-          kubectl apply -f ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/ingress.yaml || true
-          
+          K8S_PATH="./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}"
+
+          kubectl apply -f "${K8S_PATH}/service.yaml"
+          kubectl apply -f "${K8S_PATH}/autoscaling.yaml"
+
+          if [ -f "${K8S_PATH}/ingress.yaml" ]; then
+            kubectl apply -f "${K8S_PATH}/ingress.yaml"
+          fi
+
           STATUS=$(kubectl apply -f \
-          <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}/deployment.yaml))
+          <( sed "s/__VERSION__/${IMAGE_TAG}/" ${K8S_PATH}/deployment.yaml))
 
           if [ $(echo ${STATUS} | grep unchanged -c) -eq 1 ]; then
             kubectl rollout restart deployment ${PROJECT_CODE}
