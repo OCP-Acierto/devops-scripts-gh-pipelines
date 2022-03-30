@@ -49,6 +49,8 @@ jobs:
   job:
     timeout-minutes: 30
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v2
