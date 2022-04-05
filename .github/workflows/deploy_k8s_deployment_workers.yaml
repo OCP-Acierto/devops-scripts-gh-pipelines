@@ -73,6 +73,6 @@ jobs:
             kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${worker_name}/deployment.yaml)
 
             kubectl rollout restart deployment ${worker_name}
-            kubectl rollout status deployment ${worker_name} --timeout=180s
+            kubectl rollout status deployment ${worker_name} --timeout=600s
             kubectl get pods | grep ${worker_name}            
           done

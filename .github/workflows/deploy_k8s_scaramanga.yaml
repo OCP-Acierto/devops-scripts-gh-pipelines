@@ -85,7 +85,7 @@ jobs:
 
           if [ $(echo ${STATUS} | grep unchanged -c) -eq 1 ]; then
             kubectl rollout restart deployment ${PROJECT_CODE}
-            kubectl rollout status deployment ${PROJECT_CODE} --timeout=180s
+            kubectl rollout status deployment ${PROJECT_CODE} --timeout=240s
           fi
 
           kubectl get pods | grep ${PROJECT_CODE}
