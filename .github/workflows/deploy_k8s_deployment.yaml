@@ -66,7 +66,7 @@ jobs:
           kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/autoscaling.yaml
           kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/deployment.yaml)
 
-          echo "[INFO] Start Rollout Deployment with a timeout of 360 seconds"
+          echo "[INFO] Start Rollout Deployment with a timeout of 600 seconds"
           kubectl rollout restart deployment ${PROJECT_CODE}
           kubectl rollout status deployment ${PROJECT_CODE} --timeout=600s
           kubectl get pods | grep ${PROJECT_CODE}
