@@ -84,8 +84,10 @@ jobs:
           <( sed "s/__VERSION__/${IMAGE_TAG}/" ${K8S_PATH}/deployment.yaml))
 
           if [ $(echo ${STATUS} | grep unchanged -c) -eq 1 ]; then
+            TIMEOUT=600s
+            echo "[INFO] Start Rollout Deployment with a timeout of ${TIMEOUT}"
             kubectl rollout restart deployment ${PROJECT_CODE}
-            kubectl rollout status deployment ${PROJECT_CODE} --timeout=180s
+            kubectl rollout status deployment ${PROJECT_CODE} --timeout=${TIMEOUT}
           fi
 
           kubectl get pods | grep ${PROJECT_CODE}

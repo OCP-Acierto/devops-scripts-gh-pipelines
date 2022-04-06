@@ -66,12 +66,14 @@ jobs:
 
       - name: Deploy to k8s
         run: |
+          TIMEOUT=600s
           for worker in $(echo ${WORKERS_ARRAY} | jq -r .[].worker_name); do
 
             worker_name="${PROJECT_CODE}-${worker}"
             kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${worker_name}/autoscaling.yaml
             kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${worker_name}/deployment.yaml)
 
+            echo "[INFO] Start Rollout Deployment with a timeout of ${TIMEOUT}"
             kubectl rollout restart deployment ${worker_name}
             kubectl rollout status deployment ${worker_name} --timeout=180s
             kubectl get pods | grep ${worker_name}            
