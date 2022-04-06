@@ -75,6 +75,6 @@ jobs:
 
             echo "[INFO] Start Rollout Deployment with a timeout of ${TIMEOUT}"
             kubectl rollout restart deployment ${worker_name}
-            kubectl rollout status deployment ${worker_name} --timeout=180s
+            kubectl rollout status deployment ${worker_name} --timeout=${TIMEOUT}
             kubectl get pods | grep ${worker_name}            
           done
