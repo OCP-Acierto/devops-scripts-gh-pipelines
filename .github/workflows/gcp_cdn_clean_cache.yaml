@@ -28,11 +28,6 @@ jobs:
         with:
           credentials_json: ${{ secrets.gcp_cdm_registry_sa_credentials }}
 
-      - name: Set up Cloud SDK only for ${GCP_CDN_PROJECT}
-        uses: google-github-actions/setup-gcloud@v0
-        with:
-          project_id: ${GCP_CDN_PROJECT}
-
       - name: Clean cache GCP CDN
         run: |
           echo "[INFO] Invalidate cache CDN GCP"
