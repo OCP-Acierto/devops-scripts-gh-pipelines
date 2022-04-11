@@ -35,4 +35,4 @@ jobs:
             "cdn" \
             --host "${GCP_CDN_LB}" \
             --path "/*" \
-            --project "${{ env.GCP_PROJECT }}"
+            --project "${GCP_PROJECT}"
