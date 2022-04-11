@@ -21,10 +21,6 @@ on:
         default: ''
         required: true
         type: string
-      gcp_cdn_lb:
-        default: ''
-        required: true
-        type: string
       project_path:
         default: ''
         required: true
@@ -41,7 +37,6 @@ env:
   GCP_CDN_PATH: ${{ inputs.gcp_cdn_path }}
   GCP_CDN_PROJECT: ${{ inputs.gcp_cdn_project }}
   PROJECT_PATH: ${{ inputs.project_path }}
-  GCP_CDN_LB: ${{ inputs.gcp_cdn_lb }}
 jobs:
   job:
     timeout-minutes: 30
@@ -97,12 +92,3 @@ jobs:
 
           echo "[INFO] CDN Stats"
           gsutil du -sch "${GCP_CDN_PATH}"
-
-      - name: Clean cache GCP CDN
-        run: |
-          echo "[INFO] Invalidate cache CDN GCP"
-          gcloud compute url-maps invalidate-cdn-cache \
-            "cdn" \
-            --host "${GCP_CDN_LB}" \
-            --path "/*" \
-            --project "${GCP_CDN_PROJECT}"
