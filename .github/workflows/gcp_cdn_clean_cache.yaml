@@ -44,4 +44,4 @@ jobs:
             "cdn" \
             --host "${GCP_CDN_LB}" \
             --path "/*" \
-            --project "${GCP_PROJECT}"
+            --project "${GCP_CDN_PROJECT}"
