@@ -16,7 +16,7 @@ on:
       gcp_cdn_cache_invalidate_preprod:
         required: false
 env:
-  GCP_CACHE_CRED_PRE: ${{ secrets.gcp_cdn_cache_invalidate_preprod }}
+  GCP_CACHE_CRED_PREPROD: ${{ secrets.gcp_cdn_cache_invalidate_preprod }}
   GCP_CACHE_CRED_PROD: ${{ secrets.gcp_cdn_cache_invalidate_prod }}
   GCP_PROJECT: ${{ inputs.gcp_project }}
   GCP_CDN_LB: ${{ inputs.gcp_cdn_lb }}
