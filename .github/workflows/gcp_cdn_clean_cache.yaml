@@ -11,11 +11,13 @@ on:
         required: true
         type: string
     secrets:
-      gcp_cdm_registry_sa_credentials:
-        required: true
-      gcp_storage_sa_credentials:
-        required: true
+      gcp_cdn_cache_invalidate_prod:
+        required: false
+      gcp_cdn_cache_invalidate_preprod:
+        required: false
 env:
+  GCP_CACHE_CRED_PRE: ${{ secrets.gcp_cdn_cache_invalidate_preprod }}
+  GCP_CACHE_CRED_PROD: ${{ secrets.gcp_cdn_cache_invalidate_prod }}
   GCP_CDN_PROJECT: ${{ inputs.gcp_cdn_project }}
   GCP_CDN_LB: ${{ inputs.gcp_cdn_lb }}
 jobs:
@@ -23,10 +25,17 @@ jobs:
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
-      - name: Configure GCP Credentials
+      - name: Configure GCP Credentials PROD
         uses: google-github-actions/auth@v0
+        if: ${{ env.GCP_CACHE_CRED_PROD != '' }}
         with:
-          credentials_json: ${{ secrets.gcp_cdm_registry_sa_credentials }}
+          credentials_json: ${{ secrets.gcp_cdn_cache_invalidate_prod }}
+      
+      - name: Configure GCP Credentials PREPROD
+        uses: google-github-actions/auth@v0
+        if: ${{ env.GCP_CACHE_CRED_PREPROD != '' }}
+        with:
+          credentials_json: ${{ secrets.gcp_cdn_cache_invalidate_preprod }}
 
       - name: Clean cache GCP CDN
         run: |
