@@ -57,7 +57,7 @@ jobs:
       - name: Configure GKE Credentials
         run: |
           gcloud container clusters get-credentials "${GKE_CLUSTER_NAME}" \
-              --zone "${K8S_CLUSTER_ZONE}" --project "${{ env.GCP_PROJECT }}"
+              --zone "${K8S_CLUSTER_ZONE}" --project "${GCP_PROJECT }"
 
       - name: Deploy to k8s
         run: |
