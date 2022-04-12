@@ -16,8 +16,8 @@ on:
       gcp_cdn_cache_invalidate_preprod:
         required: false
 env:
-  GCP_CACHE_CRED_PRE: ${{ secrets.gcp_cdn_cache_invalidate_preprod }}
-  GCP_CACHE_CRED_PROD: ${{ secrets.gcp_cdn_cache_invalidate_prod }}
+  GCP_CDN_CACHE_INVALIDATE_PREPROD: ${{ secrets.gcp_cdn_cache_invalidate_preprod }}
+  GCP_CDN_CACHE_INVALIDATE_PROD: ${{ secrets.gcp_cdn_cache_invalidate_prod }}
   GCP_PROJECT: ${{ inputs.gcp_project }}
   GCP_CDN_LB: ${{ inputs.gcp_cdn_lb }}
 jobs:
@@ -27,13 +27,13 @@ jobs:
     steps:
       - name: Configure GCP Credentials PROD
         uses: google-github-actions/auth@v0
-        if: ${{ env.GCP_CACHE_CRED_PROD != '' }}
+        if: ${{ env.GCP_CDN_CACHE_INVALIDATE_PROD != '' }}
         with:
           credentials_json: ${{ secrets.gcp_cdn_cache_invalidate_prod }}
       
       - name: Configure GCP Credentials PREPROD
         uses: google-github-actions/auth@v0
-        if: ${{ env.GCP_CACHE_CRED_PREPROD != '' }}
+        if: ${{ env.GCP_CDN_CACHE_INVALIDATE_PREPROD != '' }}
         with:
           credentials_json: ${{ secrets.gcp_cdn_cache_invalidate_preprod }}
 
