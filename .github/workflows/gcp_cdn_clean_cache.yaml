@@ -2,7 +2,7 @@ name: Clean Cache GCP CDN
 on:
   workflow_call:
     inputs:
-      gcp_cdn_project:
+      gcp_project:
         default: ''
         required: true
         type: string
@@ -18,7 +18,7 @@ on:
 env:
   GCP_CACHE_CRED_PRE: ${{ secrets.gcp_cdn_cache_invalidate_preprod }}
   GCP_CACHE_CRED_PROD: ${{ secrets.gcp_cdn_cache_invalidate_prod }}
-  GCP_CDN_PROJECT: ${{ inputs.gcp_cdn_project }}
+  GCP_PROJECT: ${{ inputs.gcp_project }}
   GCP_CDN_LB: ${{ inputs.gcp_cdn_lb }}
 jobs:
   job:
@@ -44,4 +44,4 @@ jobs:
             "cdn" \
             --host "${GCP_CDN_LB}" \
             --path "/*" \
-            --project "${GCP_CDN_PROJECT}"
+            --project "${GCP_PROJECT}"
