@@ -8,11 +8,11 @@ on:
         type: string
       aws_registry_prod:
         default: ''
-        required: true
+        required: false
         type: string
       aws_registry_non_prod:
         default: ''
-        required: true
+        required: false
         type: string
       aws_repository:
         required: true
