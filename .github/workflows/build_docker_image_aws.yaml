@@ -27,16 +27,20 @@ on:
         type: string
     secrets:
       aws_access_key_id_non_prod:
-        required: true
+        required: false
       aws_secret_access_key_non_prod:
         required: false
       aws_access_key_id_prod:
-        required: true
+        required: false
       aws_secret_access_key_prod:
         required: false
       gh_npm_registry_pat:
         required: false
       ocp_packages_actions_role:
+        required: false
+      storyblok_apikey_pre:
+        required: false
+      storyblok_apikey_prod:
         required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
@@ -65,7 +69,7 @@ jobs:
           role-to-assume: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
           role-session-name: githubactions
           aws-region: eu-west-1
-      
+
       - name: Authenticate to CodeArtifact
         env:
           TOKEN: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
@@ -87,20 +91,38 @@ jobs:
 
       - name: Build & tag image to AWS ECR
         run: |
+          TAGS_PROD=""
+          if [ "${AWS_REGISTRY_PROD}" != "" ]; then
+            echo "[INFO] Adding AWS_REGISTRY_PROD=${AWS_REGISTRY_PROD}"
+            TAGS_PROD="--tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} "
+            TAGS_PROD+="--tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest "
+            STORYBLOK_APIKEY="--build-arg STORYBLOK_APIKEY=${{ secrets.storyblok_apikey_prod }}"
+          fi
+
+          TAGS_PRE=""
+          if [ "${AWS_REGISTRY_NON_PROD}" != "" ]; then
+            echo "[INFO] Adding AWS_REGISTRY_NON_PROD=${AWS_REGISTRY_NON_PROD}"
+            TAGS_PRE="--tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} "
+            TAGS_PRE+="--tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest "
+            STORYBLOK_APIKEY="--build-arg STORYBLOK_APIKEY=${{ secrets.storyblok_apikey_pre }}"
+          fi
+
           docker build \
             ${DOCKER_BUILD_ARGS} \
             --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
             --build-arg CODEARTIFACT_AUTH_TOKEN=${{ env.CODEARTIFACT_AUTH_TOKEN }} \
-            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
+            ${STORYBLOK_APIKEY} \
+            ${TAGS_PROD} \
+            ${TAGS_PRE} \
             --file ${DOCKER_FILE} .
 
       - name: Push image to AWS ECR PROD
         run: |
-          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
+          if [ "${AWS_REGISTRY_PROD}" != "" ]; then
+            echo "[INFO] Pushing to PROD ${AWS_REGISTRY_PROD}"
+            docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
+            docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
+          fi
 
       - name: Configure AWS Credentials NON-PROD
         uses: aws-actions/configure-aws-credentials@v1
@@ -114,5 +136,9 @@ jobs:
 
       - name: Push image to AWS ECR NON-PROD
         run: |
-          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
+
+          if [ "${AWS_REGISTRY_NON_PROD}" != "" ]; then
+            echo "[INFO] Pushing to NON-PROD ${AWS_REGISTRY_NON_PROD}"
+            docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
+            docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
+          fi
