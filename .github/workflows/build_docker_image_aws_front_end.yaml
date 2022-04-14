@@ -78,6 +78,7 @@ jobs:
             --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
             --build-arg STORYBLOK_APIKEY=${{ secrets.storyblok_apikey_prod }} \
             --build-arg AWS_BASE_IMAGE="${AWS_REGISTRY_NON_PROD}/node16:latest" \
+            --build-arg AWS_REGISTRY="${AWS_REGISTRY_PROD}/" \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
@@ -109,7 +110,7 @@ jobs:
             ${DOCKER_BUILD_ARGS} \
             --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
             --build-arg STORYBLOK_APIKEY=${{ secrets.storyblok_apikey_pre }} \
-            --build-arg AWS_REGISTRY="${AWS_REGISTRY_NON_PROD}/node16:latest" \
+            --build-arg AWS_REGISTRY="${AWS_REGISTRY_NON_PROD}/" \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
