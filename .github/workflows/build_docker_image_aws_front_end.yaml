@@ -8,11 +8,11 @@ on:
         type: string
       aws_registry_prod:
         default: ''
-        required: true
+        required: false
         type: string
       aws_registry_non_prod:
         default: ''
-        required: true
+        required: false
         type: string
       aws_repository:
         required: true
@@ -27,16 +27,18 @@ on:
         type: string
     secrets:
       aws_access_key_id_non_prod:
-        required: true
+        required: false
       aws_secret_access_key_non_prod:
         required: false
       aws_access_key_id_prod:
-        required: true
+        required: false
       aws_secret_access_key_prod:
         required: false
       gh_npm_registry_pat:
         required: false
-      ocp_packages_actions_role:
+      storyblok_apikey_pre:
+        required: false
+      storyblok_apikey_prod:
         required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
@@ -56,51 +58,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials OCP-ARTIFACTS
-        uses: aws-actions/configure-aws-credentials@v1
-        env:
-          TOKEN: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
-        if: ${{ env.TOKEN != '' }}
-        with:
-          role-to-assume: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
-          role-session-name: githubactions
-          aws-region: eu-west-1
-
-      - name: Authenticate to CodeArtifact
-        env:
-          TOKEN: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
-        if: ${{ env.TOKEN != '' }}
-        run: |
-          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bauer-ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text)
-          echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
-          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
-
       - name: Configure AWS Credentials PROD
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_prod }}
           aws-region: eu-west-1
+        if: ${{ env.AWS_REGISTRY_PROD != '' }}
 
       - name: Login to Amazon ECR PROD
         uses: aws-actions/amazon-ecr-login@v1
+        if: ${{ env.AWS_REGISTRY_PROD != '' }}
 
-      - name: Build & tag image to AWS ECR
+      - name: Build & tag image to AWS ECR PROD
         run: |
+          echo "[INFO] Adding AWS_REGISTRY_PROD=${AWS_REGISTRY_PROD}"
           docker build \
             ${DOCKER_BUILD_ARGS} \
             --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
-            --build-arg CODEARTIFACT_AUTH_TOKEN=${{ env.CODEARTIFACT_AUTH_TOKEN }} \
+            --build-arg STORYBLOK_APIKEY=${{ secrets.storyblok_apikey_prod }} \
+            --build-arg AWS_BASE_IMAGE="${AWS_REGISTRY_NON_PROD}/node16:latest" \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
+        if: ${{ env.AWS_REGISTRY_PROD != '' }}
 
       - name: Push image to AWS ECR PROD
         run: |
-          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
+            docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
+            docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
+        if: ${{ env.AWS_REGISTRY_PROD != '' }}
+
 
       - name: Configure AWS Credentials NON-PROD
         uses: aws-actions/configure-aws-credentials@v1
@@ -108,11 +96,28 @@ jobs:
           aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
           aws-region: eu-west-1
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
 
       - name: Login to Amazon ECR NON-PROD
         uses: aws-actions/amazon-ecr-login@v1
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
+
+      - name: Build & tag image to AWS ECR NON-PROD
+        run: |
+          echo "[INFO] Adding AWS_REGISTRY_NON_PROD=${AWS_REGISTRY_NON_PROD}"
+          docker build \
+            ${DOCKER_BUILD_ARGS} \
+            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
+            --build-arg STORYBLOK_APIKEY=${{ secrets.storyblok_apikey_pre }} \
+            --build-arg AWS_REGISTRY="${AWS_REGISTRY_NON_PROD}/node16:latest" \
+            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
+            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
+            --file ${DOCKER_FILE} .
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
 
       - name: Push image to AWS ECR NON-PROD
         run: |
+          echo "[INFO] Pushing to NON-PROD ${AWS_REGISTRY_NON_PROD}"
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
