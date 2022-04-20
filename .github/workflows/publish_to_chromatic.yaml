@@ -4,6 +4,8 @@ on:
     secrets:
       chromatic_project_token:
         required: true
+      gh_npm_registry_pat:
+        required: true
 jobs:
   job:
     runs-on: ubuntu-latest
