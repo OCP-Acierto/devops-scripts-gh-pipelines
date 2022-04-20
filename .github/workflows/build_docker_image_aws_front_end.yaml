@@ -36,9 +36,9 @@ on:
         required: false
       gh_npm_registry_pat:
         required: false
-      storyblok_apikey_pre:
+      storyblok_api_token_non_prod:
         required: false
-      storyblok_apikey_prod:
+      storyblok_api_token_prod:
         required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
@@ -76,7 +76,7 @@ jobs:
           docker build \
             ${DOCKER_BUILD_ARGS} \
             --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
-            --build-arg STORYBLOK_APIKEY=${{ secrets.storyblok_apikey_prod }} \
+            --build-arg STORYBLOK_API_TOKEN=${{ secrets.storyblok_api_token_prod }} \
             --build-arg AWS_REGISTRY=${AWS_REGISTRY_PROD} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
@@ -108,7 +108,7 @@ jobs:
           docker build \
             ${DOCKER_BUILD_ARGS} \
             --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
-            --build-arg STORYBLOK_APIKEY=${{ secrets.storyblok_apikey_pre }} \
+            --build-arg STORYBLOK_API_TOKEN=${{ secrets.storyblok_api_token_non_prod }} \
             --build-arg AWS_REGISTRY=${AWS_REGISTRY_NON_PROD} \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
