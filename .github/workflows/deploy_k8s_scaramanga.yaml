@@ -46,11 +46,11 @@ jobs:
 
       - name: Install Kubectl ${{ env.KUBECTL_VERSION }}
         run: |
-          sudo rm -fv /usr/bin/kubectl
+          sudo rm -fv  /usr/local/bin/kubectl
           curl -sLO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
           sudo chmod +x kubectl
-          sudo mv kubectl /usr/bin/kubectl
-          kubectl version --output json | jq '.clientVersion.gitVersion, .serverVersion.gitVersion'
+          sudo mv -v kubectl /usr/local/bin/kubectl
+          kubectl version --output json | jq '.clientVersion.gitVersion'
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -62,6 +62,7 @@ jobs:
       - name: Configure EKS Credentials
         run: |
           aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
+          kubectl version --output json | jq '.serverVersion.gitVersion'
 
       - name: Update Configmap
         run: |
