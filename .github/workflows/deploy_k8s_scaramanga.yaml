@@ -46,10 +46,10 @@ jobs:
 
       - name: Install Kubectl ${{ env.KUBECTL_VERSION }}
         run: |
-          rm -fv /usr/bin/kubectl
+          sudo rm -fv /usr/bin/kubectl
           curl -sLO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          mv kubectl /usr/bin/kubectl
+          sudo chmod +x kubectl
+          sudo mv kubectl /usr/bin/kubectl
           kubectl version --output json | jq '.clientVersion.gitVersion, .serverVersion.gitVersion'
 
       - name: Configure AWS Credentials
