@@ -40,7 +40,6 @@ env:
   PROJECT_CODE: ${{ inputs.project_code }}
   DEPLOY_ENV: ${{ inputs.deploy_env }}
   K8S_CLUSTER_ZONE: ${{ inputs.k8s_cluster_zone }}
-  KUBECTL_VERSION: v1.23.6
   GCP_PROJECT: ${{ inputs.gcp_project }}
   GKE_CLUSTER_NAME: ${{ inputs.gke_cluster_name }}
   SECRET_FILTER: ${{ inputs.secret_filter }}
@@ -57,13 +56,6 @@ jobs:
           repository: OCP-Acierto/shared-config-management
           token: ${{ secrets.GH_PULL_REPO_PAT }}
           path: config-management
-
-      - name: Install Kubectl ${{ env.KUBECTL_VERSION }}
-        run: |
-          curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
-          ln -s "$(pwd)/kubectl" /usr/sbin/kubectl
-          chmod +x /usr/sbin/kubectl
-          kubectl version --output json | jq '.clientVersion.gitVersion, .serverVersion.gitVersion'
 
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v0
