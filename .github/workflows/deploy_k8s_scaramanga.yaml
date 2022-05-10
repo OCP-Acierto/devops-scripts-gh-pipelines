@@ -87,7 +87,7 @@ jobs:
           kubectl apply -f "${K8S_PATH}/autoscaling.yaml"
 
           if [ -f "${K8S_PATH}/ingress.yaml" ]; then
-            kubectl apply -f "${K8S_PATH}/ingress.yaml"
+            kubectl apply -f <( sed "s/__INGRESS_APIKEY__/${{ secrets.INGRESS_APIKEY }}/" ${K8S_PATH}/ingress.yaml))
           fi
 
           STATUS=$(kubectl apply -f \
