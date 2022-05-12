@@ -95,6 +95,7 @@ jobs:
 
           STATUS=$(kubectl apply -f \
           <( sed "s/__VERSION__/${IMAGE_TAG}/" ${K8S_PATH}/deployment.yaml))
+          echo "[INFO] ${STATUS}"
 
           if [ $(echo ${STATUS} | grep unchanged -c) -eq 1 ]; then
             echo "[INFO] Restart using rollout Deployment with a timeout of ${TIMEOUT}"
