@@ -104,10 +104,10 @@ jobs:
             echo "[INFO] Deploying new version ${IMAGE_TAG} with a timeout of ${TIMEOUT}"
           fi
 
-          kubectl rollout status deployment ${PROJECT_CODE} --timeout=${TIMEOUT}
-          errlvl=$?
+          kubectl rollout status deployment ${PROJECT_CODE} --timeout=${TIMEOUT} || true
+          TIMED_OUT=$(kubectl rollout status deployment ${PROJECT_CODE} --timeout=2s | grep 'timed out' -c)
 
-          if [ $errlvl -ne 0 ]; then
+          if [ "${TIMED_OUT}" -ne 0 ]; then
             echo "[ERROR] Something went wrong deploying the new version"
             kubectl get pods | grep ${PROJECT_CODE}
 
