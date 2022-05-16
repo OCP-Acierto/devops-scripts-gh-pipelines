@@ -84,7 +84,7 @@ jobs:
       - name: Deploy to k8s
         run: |
           K8S_PATH="./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}"
-          TIMEOUT=600s
+          TIMEOUT=180s
 
           kubectl apply -f "${K8S_PATH}/service.yaml"
           kubectl apply -f "${K8S_PATH}/autoscaling.yaml"
@@ -95,6 +95,7 @@ jobs:
 
           STATUS=$(kubectl apply -f \
           <( sed "s/__VERSION__/${IMAGE_TAG}/" ${K8S_PATH}/deployment.yaml))
+          echo "[INFO] ${STATUS}"
 
           if [ $(echo ${STATUS} | grep unchanged -c) -eq 1 ]; then
             echo "[INFO] Restart using rollout Deployment with a timeout of ${TIMEOUT}"
@@ -104,4 +105,15 @@ jobs:
           fi
 
           kubectl rollout status deployment ${PROJECT_CODE} --timeout=${TIMEOUT}
+          errlvl=$?
 
+          if [ $errlvl -ne 0 ]; then
+            echo "[ERROR] Something went wrong deploying the new version"
+            kubectl get pods | grep ${PROJECT_CODE}
+
+            echo "[INFO] Getting Deployment Events"
+            kubectl get events | grep -i ${PROJECT_CODE} | grep -vE 'Normal|LoggingDisabled'
+
+            #echo "[INFO] Getting Deployment describe"
+            #kubectl describe pod ${PROJECT_CODE}
+          fi
