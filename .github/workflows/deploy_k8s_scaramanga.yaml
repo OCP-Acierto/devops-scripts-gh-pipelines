@@ -105,18 +105,12 @@ jobs:
           fi
 
           kubectl rollout status deployment ${PROJECT_CODE} --timeout=${TIMEOUT} || true
-          TIMED_OUT=$(kubectl rollout status deployment ${PROJECT_CODE} --timeout=2s | grep 'timed out' -c)
 
-          if [ "${TIMED_OUT}" -ne 0 ]; then
-            echo "[ERROR] Something went wrong deploying the new version"
-            kubectl get pods | grep ${PROJECT_CODE}
+          echo "[INFO] Getting Deployment Status"
+          kubectl get pods | grep -i ${PROJECT_CODE}
 
-            echo "[INFO] Getting Deployment Events"
-            kubectl get events | grep -i ${PROJECT_CODE} | grep -vE 'Normal|LoggingDisabled'
+          echo "[INFO] Getting Deployment Events"
+          kubectl get events | grep -i ${PROJECT_CODE} | grep -vE 'Normal|LoggingDisabled'
 
-            #echo "[INFO] Getting Deployment describe"
-            #kubectl describe pod ${PROJECT_CODE}
-
-            BACKOFF_POD=$(kubectl get pods | grep ${PROJECT_CODE} | grep CrashLoopBackOff | awk '{print $1}')
-            kubectl logs ${BACKOFF_POD}
-          fi
+          echo "[INFO] Getting Pods Logs"
+          kubectl logs -lapp=${PROJECT_CODE}
