@@ -44,7 +44,7 @@ jobs:
           do
             status=$(aws lambda get-function \
             --function-name ${PROJECT_CODE} \
-            --query 'Configuration.[State, LastUpdateStatus]' \
-            | awk -F" " '{print $2}' | grep -c Successful)
+            --query 'Configuration.[LastUpdateStatus]' \
+            | grep -c Successful)
           done
           echo "[INFO] Function deployed"
