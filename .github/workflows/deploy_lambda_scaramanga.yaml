@@ -39,12 +39,15 @@ jobs:
             --function-name ${PROJECT_CODE} \
             --image-uri ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}
 
+          retries=0;
           status=0;
-          while [ $status != 1 ]
+          while [ $status != 1 ] || [ $retries -le "30" ]
           do
             status=$(aws lambda get-function \
             --function-name ${PROJECT_CODE} \
             --query 'Configuration.[LastUpdateStatus]' \
             | grep -c Successful)
+            sleep 1s;
+            ((retries))
           done
           echo "[INFO] Function deployed"
