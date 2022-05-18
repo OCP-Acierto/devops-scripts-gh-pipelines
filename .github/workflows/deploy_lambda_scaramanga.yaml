@@ -38,3 +38,13 @@ jobs:
           aws lambda update-function-code \
             --function-name ${PROJECT_CODE} \
             --image-uri ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}
+
+          status=0;
+          while [ $status != 1 ]
+          do
+            status=$(aws lambda get-function \
+            --function-name ${PROJECT_CODE} \
+            --query 'Configuration.[State, LastUpdateStatus]' \
+            | awk -F" " '{print $2}' | grep Successful | wc -l)
+          done
+          echo "[INFO] Function deployed"
