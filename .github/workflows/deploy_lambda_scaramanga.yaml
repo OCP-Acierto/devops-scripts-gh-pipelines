@@ -51,7 +51,7 @@ jobs:
             ((retries++))
           done
 
-          if [ $retries -eq "300" ]
+          if [ $retries -ge "300" ]
           then
             echo "[ERROR] Function not deployed yet, call your confidence DevOps"
             aws lambda get-function \
