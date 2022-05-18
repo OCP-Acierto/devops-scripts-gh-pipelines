@@ -46,7 +46,7 @@ jobs:
             status=$(aws lambda get-function \
             --function-name ${PROJECT_CODE} \
             --query 'Configuration.[LastUpdateStatus]' \
-            | grep -c Successful)
+            | grep -c Successful);
             sleep 1s;
             ((retries++))
           done
