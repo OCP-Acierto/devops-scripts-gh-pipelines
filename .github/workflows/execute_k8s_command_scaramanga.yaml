@@ -24,8 +24,8 @@ env:
   PROJECT_CODE: ${{ inputs.project_code }}
   EKS_CLUSTER_NAME: ${{ inputs.eks_cluster_name }}
   EKS_CLUSTER_ZONE: ${{ inputs.eks_cluster_zone }}
-  KUBECTL_VERSION: v1.23.6
   POD_COMMAND: ${{ inputs.pod_command }}
+  KUBECTL_VERSION: v1.23.6
 jobs:
   job:
     timeout-minutes: 30
@@ -57,4 +57,4 @@ jobs:
           POD_NAME=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep -i ${PROJECT_CODE} | tail -n1)
 
           echo "[INFO] Execute ${POD_COMMAND} on Pod ${POD_NAME}"
-          kubectl exec ${POD_NAME} -- bash -c "${POD_COMMAND}"
+          kubectl exec -ti ${POD_NAME} -- bash -c "${POD_COMMAND}"
