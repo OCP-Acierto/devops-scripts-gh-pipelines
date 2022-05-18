@@ -41,7 +41,7 @@ jobs:
 
           retries=0;
           status=0;
-          while [ $status != 1 ] || [ $retries -le "300" ]
+          while [ $status -eq 0 ] && [ $retries -le "300" ]
           do
             status=$(aws lambda get-function \
             --function-name ${PROJECT_CODE} \
@@ -51,13 +51,13 @@ jobs:
             ((retries++))
           done
 
-          if [ $retries -gt "300" ]
+          if [ $retries -eq "300" ]
           then
-            echo "[ERROR] Function not deployed yet"
+            echo "[ERROR] Function not deployed yet, call your confidence DevOps"
             aws lambda get-function \
             --function-name ${PROJECT_CODE} \
             --query 'Configuration.[LastUpdateStatus]'
             exit 1
           else
-            echo "[INFO] Function deployed"
+            echo "[INFO] Function deployed Succesfully"
           fi
