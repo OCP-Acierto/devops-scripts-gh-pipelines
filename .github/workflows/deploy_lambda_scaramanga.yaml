@@ -48,10 +48,11 @@ jobs:
             --query 'Configuration.[LastUpdateStatus]' \
             | grep -c Successful)
             sleep 1s;
-            ((retries))
+            ((retries++))
           done
 
           if [ $retries -gt "300" ]
+          then
             echo "[ERROR] Function not deployed yet"
             aws lambda get-function \
             --function-name ${PROJECT_CODE} \
@@ -59,3 +60,4 @@ jobs:
             exit 1
           else
             echo "[INFO] Function deployed"
+          fi
