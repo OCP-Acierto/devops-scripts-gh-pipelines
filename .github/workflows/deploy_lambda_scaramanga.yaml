@@ -56,4 +56,7 @@ jobs:
           then
             echo "Not deployed yet, weird call your confidence DevOps"
             exit 1
+          else
+            echo "Deployed successfully"
+            exit 0
           fi
