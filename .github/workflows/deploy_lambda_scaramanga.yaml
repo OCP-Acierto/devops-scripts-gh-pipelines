@@ -40,17 +40,16 @@ jobs:
             --image-uri ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}
 
           retries=0;
-          status=0;
-          while [ $status -eq 0 ] && [ $retries -le "300" ]
+          
+          while [[ $status -ne 1 ]] && [[ $retries -le "300" ]]
           do
             status=$(aws lambda get-function \
             --function-name ${PROJECT_CODE} \
             --query 'Configuration.[LastUpdateStatus]' \
-            | grep -c Successful)
+            | grep -c Successful||true)
             sleep 1s;
-            ((retries++))
+            retries=$(($retries + 1)) 
           done
-
           if [ $retries -ge "300" ]
           then
             echo "[ERROR] Function not deployed yet, call your confidence DevOps"
