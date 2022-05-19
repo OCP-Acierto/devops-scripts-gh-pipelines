@@ -39,24 +39,24 @@ jobs:
             --function-name ${PROJECT_CODE} \
             --image-uri ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}
 
-          echo "[INFO] Comprobaremos si ha terminado"
-          sleep 30
-
-          if [ `aws lambda get-function --function-name ${PROJECT_CODE} --query 'Configuration.[LastUpdateStatus]' | grep -c Successful` -ne 1 ];
+          retries=0;
+          
+          while [[ $status -ne 1 ]] && [[ $retries -le "300" ]]
+          do
+            status=$(aws lambda get-function \
+            --function-name ${PROJECT_CODE} \
+            --query 'Configuration.[LastUpdateStatus]' \
+            | grep -c Successful||true)
+            sleep 1s;
+            retries=$(($retries + 1)) 
+          done
+          if [ $retries -ge "300" ]
           then
-            echo "Not deployed yet, waiting 30s more"
+            echo "[ERROR] Function not deployed yet, call your confidence DevOps"
+            aws lambda get-function \
+            --function-name ${PROJECT_CODE} \
+            --query 'Configuration.[LastUpdateStatus]'
             exit 1
           else
-            echo "Deployed successfully"
-            exit 0
-          fi
-
-          sleep 30
-          if [ `aws lambda get-function --function-name ${PROJECT_CODE} --query 'Configuration.[LastUpdateStatus]' | grep -c Successful` -ne 1 ];
-          then
-            echo "Not deployed yet, weird call your confidence DevOps"
-            exit 1
-          else
-            echo "Deployed successfully"
-            exit 0
+            echo "[INFO] Function deployed Succesfully"
           fi
