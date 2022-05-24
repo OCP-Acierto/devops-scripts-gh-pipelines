@@ -66,6 +66,15 @@ jobs:
           aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
           kubectl version --output json | jq '.serverVersion.gitVersion'
 
+      - name: Check that Docker image is pushed to ECR Registry
+        run: |
+          if [ "$(aws ecr list-images --repository-name ocp-api-users | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
+            echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment";
+          else
+            echo "[ERROR] Docker Image with tag ${IMAGE_TAG} doesn't exist!, exit deployment";
+            exit 1
+          fi
+
       - name: Update Configmap
         run: |
           touch env_file
@@ -110,7 +119,7 @@ jobs:
           kubectl get pods | grep -i ${PROJECT_CODE}
 
           echo "[INFO] Getting Deployment Events"
-          kubectl get events | grep -i ${PROJECT_CODE} | grep -vE 'Normal|LoggingDisabled'
+          kubectl get events | grep -i ${PROJECT_CODE} | tail -n10 || true
 
           echo "[INFO] Getting Pods Logs"
           kubectl logs -lapp=${PROJECT_CODE}
