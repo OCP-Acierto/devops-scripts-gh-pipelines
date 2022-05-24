@@ -33,6 +33,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
+      - name: Check that Docker image is pushed to ECR Registry
+        run: |
+          if [ "$(aws ecr list-images --repository-name ocp-api-users | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
+            echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment";
+          else
+            echo "[ERROR] Docker Image with tag ${IMAGE_TAG} doesn't exist!, exit deployment";
+            exit 1
+          fi
+
       - name: Deploy to Lambda
         run: |
           aws lambda update-function-code \
