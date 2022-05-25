@@ -68,7 +68,7 @@ jobs:
 
       - name: Check that Docker image is pushed to ECR Registry
         run: |
-          if [ "$(aws ecr list-images --repository-name ocp-api-users | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
+          if [ "$(aws ecr list-images --repository-name ${PROJECT_CODE} | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
             echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment";
           else
             echo "[ERROR] Docker Image with tag ${IMAGE_TAG} doesn't exist!, exit deployment";
