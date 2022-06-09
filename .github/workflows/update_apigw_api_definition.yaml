@@ -1,0 +1,64 @@
+name: Deploy to Lambda
+on:
+  workflow_call:
+    inputs:
+      project_code:
+        required: true
+        type: string
+      aws_profile:
+        required: true
+        type: string
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+      gh_pull_repo_pat:
+        required: true
+env:
+  PROJECT_CODE: ${{ inputs.project_code }}
+  AWS_PROFILE: ${{ inputs.aws_profile }}
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Checkout terraform repo
+        uses: actions/checkout@v2
+        with:
+          repository: OCP-Acierto/devops-scripts-terraform
+          token: ${{ secrets.GH_PULL_REPO_PAT }}
+          path: terraform
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_NON_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_NON_PROD }}
+          aws-region: eu-west-1
+
+      - name: Update APIGW with terraform
+        run: |
+          TF_PATH="./terraform/aws/${AWS_PROFILE}"
+          mkdir -vp $HOME/.aws
+          
+          echo -n "[${AWS_PROFILE}]
+          region=eu-west-1
+          output=text
+          aws_access_key_id=$AWS_ACCESS_KEY_ID
+          aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" > $HOME/.aws/credentials
+          
+          echo "[INFO] Move apigw config to terraform workspace"
+          mkdir -pv "${TF_PATH}/apigw/${PROJECT_CODE}"
+          mv -v ./apigw/${AWS_PROFILE}/ocp-api-documents/swagger.yaml \
+                ${TF_PATH}/apigw/${PROJECT_CODE}/swagger.yaml
+          
+          cd ${TF_PATH}
+          terraform init && \
+          terraform apply -auto-approve \
+          --target=aws_api_gateway_rest_api.${PROJECT_CODE} \
+          --target=aws_api_gateway_deployment.${PROJECT_CODE} \
+          --target=aws_api_gateway_integration.${PROJECT_CODE}
