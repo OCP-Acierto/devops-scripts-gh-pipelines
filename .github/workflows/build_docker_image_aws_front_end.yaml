@@ -72,7 +72,7 @@ jobs:
           echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_PROD}"
           docker build \
             ${DOCKER_BUILD_ARGS} \
-            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
+            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
             --build-arg AWS_REGISTRY=${AWS_REGISTRY_PROD} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
@@ -103,7 +103,7 @@ jobs:
           echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_NON_PROD}"
           docker build \
             ${DOCKER_BUILD_ARGS} \
-            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
+            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
             --build-arg AWS_REGISTRY=${AWS_REGISTRY_NON_PROD} \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \

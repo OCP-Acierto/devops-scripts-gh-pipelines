@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: OCP-Acierto/devops-scripts-k8s
-          token: ${{ secrets.GH_PULL_REPO_PAT }}
+          token: ${{ secrets.gh_pull_repo_pat }}
           path: k8s
 
       - name: Configure GCP Credentials

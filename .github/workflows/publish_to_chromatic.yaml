@@ -17,9 +17,9 @@ jobs:
       - name: Install dependencies
         run: yarn --frozen-lockfile
         env:
-          GH_NPM_REGISTRY_PAT: ${{ secrets.GH_NPM_REGISTRY_PAT }}
+          GH_NPM_REGISTRY_PAT: ${{ secrets.gh_npm_registry_pat }}
 
       - name: Publish to Chromatic
         uses: chromaui/action@v1
         with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          projectToken: ${{ secrets.chromatic_project_token }}
