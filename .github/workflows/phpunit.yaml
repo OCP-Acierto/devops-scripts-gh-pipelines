@@ -69,7 +69,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: OCP-Acierto/shared-config-management
-          token: ${{ secrets.GH_PULL_REPO_PAT }}
+          token: ${{ secrets.gh_pull_repo_pat }}
           path: config-management
 
       - name: Configure GCP Credentials
@@ -103,12 +103,12 @@ jobs:
           fi
 
           if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
-            docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }} -e RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASS }} \
+            docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.rabbitmq_user }} -e RABBITMQ_DEFAULT_PASS=${{ secrets.rabbitmq_pass }} \
             ${PHPUNIT_RABBITMQ}
           fi
 
           if [ ! -z "${PHPUNIT_MYSQL}" ]; then
-            docker run -tid --rm --name mysql --network phpunit-test -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASS }} \
+            docker run -tid --rm --name mysql --network phpunit-test -e MYSQL_ROOT_PASSWORD=${{ secrets.mysql_pass }} \
             ${PHPUNIT_MYSQL}
           fi
 
