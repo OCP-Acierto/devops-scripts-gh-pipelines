@@ -59,16 +59,16 @@ jobs:
       - name: Configure AWS credentials OCP-ARTIFACTS
         uses: aws-actions/configure-aws-credentials@v1
         env:
-          TOKEN: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
+          TOKEN: ${{ secrets.ocp_packages_actions_role }}
         if: ${{ env.TOKEN != '' }}
         with:
-          role-to-assume: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
+          role-to-assume: ${{ secrets.ocp_packages_actions_role }}
           role-session-name: githubactions
           aws-region: eu-west-1
 
       - name: Authenticate to CodeArtifact
         env:
-          TOKEN: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
+          TOKEN: ${{ secrets.ocp_packages_actions_role }}
         if: ${{ env.TOKEN != '' }}
         run: |
           export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bauer-ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text)
@@ -89,7 +89,7 @@ jobs:
         run: |
           docker build \
             ${DOCKER_BUILD_ARGS} \
-            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.GH_NPM_REGISTRY_PAT }}" \
+            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
             --build-arg CODEARTIFACT_AUTH_TOKEN=${{ env.CODEARTIFACT_AUTH_TOKEN }} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
