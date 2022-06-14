@@ -36,8 +36,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
           aws-region: eu-west-1
 
       - name: Update APIGW with terraform
