@@ -42,7 +42,7 @@ jobs:
 
       - name: Update APIGW with terraform
         run: |
-          TF_PATH="./terraform/aws/${AWS_PROFILE}"
+          TF_PATH="./terraform/aws/general/${AWS_PROFILE}"
           mkdir -vp $HOME/.aws
           
           echo -n "[${AWS_PROFILE}]
