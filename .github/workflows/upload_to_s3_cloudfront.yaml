@@ -10,7 +10,7 @@ on:
         default: ''
         required: true
         type: string
-      aws_repository:
+      project_code:
         required: true
         type: string
       container_path:
@@ -29,7 +29,7 @@ on:
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   AWS_REGISTRY: ${{ inputs.aws_registry }}
-  AWS_REPOSITORY: ${{ inputs.aws_repository }}
+  PROJECT_CODE: ${{ inputs.project_code }}
   CONTAINER_PATH: ${{ inputs.container_path }}
   AWS_S3_CLOUDFRONT: ${{ inputs.aws_s3_cloudfront }}
 jobs:
@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "[INFO] Copy contents from image to S3 CloudFront"
 
-          CONTAINER_ID=$(docker create "${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}")
+          CONTAINER_ID=$(docker create "${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}")
           docker cp ${CONTAINER_ID}:${CONTAINER_PATH} s3_cloudfront
 
           aws s3 cp s3_cloudfront ${AWS_S3_CLOUDFRONT} --recursive
