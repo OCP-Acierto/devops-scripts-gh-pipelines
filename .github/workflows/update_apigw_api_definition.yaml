@@ -26,13 +26,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Checkout terraform repo
-        uses: actions/checkout@v2
-        with:
-          repository: OCP-Acierto/devops-scripts-terraform
-          token: ${{ secrets.gh_pull_repo_pat }}
-          path: terraform
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -42,7 +35,8 @@ jobs:
 
       - name: Update APIGW with terraform
         run: |
-          TF_PATH="./terraform/aws/general/${AWS_PROFILE}"
+          echo "[INFO] Create AWS Profile"
+
           mkdir -vp $HOME/.aws
           
           echo -n "[${AWS_PROFILE}]
@@ -51,12 +45,7 @@ jobs:
           aws_access_key_id=$AWS_ACCESS_KEY_ID
           aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" > $HOME/.aws/credentials
           
-          echo "[INFO] Move apigw config to terraform workspace"
-          mkdir -pv "${TF_PATH}/apigw/${PROJECT_CODE}"
-          mv -v ./apigw/${AWS_PROFILE}/ocp-api-documents/swagger.yaml \
-                ${TF_PATH}/apigw/${PROJECT_CODE}/swagger.yaml
-          
-          cd ${TF_PATH}
+          echo "[INFO] Execute Terraform"
           terraform init && \
           terraform apply -auto-approve \
           --target=aws_api_gateway_rest_api.${PROJECT_CODE} \
