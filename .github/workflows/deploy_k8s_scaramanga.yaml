@@ -116,7 +116,7 @@ jobs:
           fi
 
           STATUS=$(kubectl apply -f \
-          <( sed "s/__VERSION__/${IMAGE_TAG}/;s/__EPOCH__/$(date +%s)" ${K8S_PATH}/deployment.yaml))
+          <( sed "s/__VERSION__/${IMAGE_TAG}/;s/__EPOCH__/$(date +%s)/" ${K8S_PATH}/deployment.yaml))
           echo "[INFO] ${STATUS}"
 
           if [ $(echo ${STATUS} | grep unchanged -c) -eq 1 ]; then
