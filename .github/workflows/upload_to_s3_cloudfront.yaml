@@ -49,9 +49,11 @@ jobs:
 
       - name: Push Static Files to S3 bucket & Invalidate CloudFront Cache
         run: |
-          echo "[INFO] Copy contents from image to S3 CloudFront"
-
+          echo "[INFO] Create Docker Container ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}"
           CONTAINER_ID=$(docker create "${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}")
+
+          echo "[INFO] Copy contents from ${CONTAINER_ID}:${CONTAINER_PATH} to loca path 's3_cloudfront'"
           docker cp ${CONTAINER_ID}:${CONTAINER_PATH} s3_cloudfront
 
+          echo "[INFO] Copy contents from ${CONTAINER_ID}:${CONTAINER_PATH} to S3 ${AWS_S3_CLOUDFRONT}"
           aws s3 cp s3_cloudfront ${AWS_S3_CLOUDFRONT} --recursive
