@@ -56,3 +56,15 @@ jobs:
           --target=aws_api_gateway_rest_api.${PROJECT_CODE} \
           --target=aws_api_gateway_deployment.${PROJECT_CODE} \
           --target=aws_api_gateway_integration.${PROJECT_CODE}
+
+          echo "[INFO] Get APIGW ID"
+          APIGW_ID=$(aws apigateway get-rest-apis --output json |
+                     jq '.items[] | {id: .id, name: .name} |
+                     select(.name == "'"${PROJECT_CODE}"'") | .id' -r)
+
+          echo "[INFO] Create New APIGW Deployment"
+          aws apigateway create-deployment \
+              --rest-api-id ${APIGW_ID} \
+              --stage-name 'default' \
+              --stage-description 'Default Stage' \
+              --description 'Deployed from Github Actions'
