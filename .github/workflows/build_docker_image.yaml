@@ -26,6 +26,8 @@ on:
         required: true
       gh_composer_pat:
         required: false
+      gh_npm_registry_pat:
+        required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
@@ -58,6 +60,7 @@ jobs:
         run: |
           echo "[INFO] Run Build with ARGS ${DOCKER_BUILD_ARGS}"
           docker build \
+            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
             --build-arg GH_COMPOSER_PAT="${{ secrets.gh_composer_pat }}" \
             ${DOCKER_BUILD_ARGS} \
             --tag ${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG} \
