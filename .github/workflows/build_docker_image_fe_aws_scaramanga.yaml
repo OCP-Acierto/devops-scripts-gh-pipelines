@@ -33,7 +33,7 @@ on:
         default: '80'
         required: true
         type: string
-      tests_vitests:
+      tests_vitest:
         default: 'false'
         required: false
         type: string
