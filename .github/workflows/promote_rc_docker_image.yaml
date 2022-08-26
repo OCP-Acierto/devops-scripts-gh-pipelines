@@ -45,6 +45,9 @@ jobs:
             exit 1
           fi
 
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
       - name: Promoting Docker image to Release Candidate $GIT_TAG
         run: |
            docker pull ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}
