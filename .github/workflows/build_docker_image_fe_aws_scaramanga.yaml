@@ -72,7 +72,7 @@ jobs:
       - name: Execute UnitTests for vitest
         if: ${{ env.TESTS_VITEST == 'true' }}
         run: |
-          npm install
+          yarn --frozen-lockfile --no-progress
           
           coverage=$(node node_modules/vitest/vitest.mjs  run --coverage \
                      --reporter=json --outputFile=test.json | grep 'All files' |
