@@ -1,0 +1,55 @@
+name: Promote Release Candidate (RC) Docker Image
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+      rc_tag:
+        required: true
+        type: string
+      project_code:
+        required: true
+        type: string
+      aws_registry:
+        required: true
+        type: string
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  RC_TAG: ${{ inputs.rc_tag }}
+  PROJECT_CODE: ${{ inputs.project_code }}
+  AWS_REGISTRY: ${{ inputs.aws_registry }}
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: eu-west-1
+
+      - name: Check that Docker image is pushed to ECR Registry
+        run: |
+          if [ "$(aws ecr list-images --repository-name ${PROJECT_CODE} | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
+            echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment";
+          else
+            echo "[ERROR] Docker Image with tag ${IMAGE_TAG} doesn't exist!, exit deployment";
+            exit 1
+          fi
+
+      - name: Promoting Docker image to Release Candidate $GIT_TAG
+        run: |
+           docker pull ${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG}
+
+           docker tag ${AWS_REGISTRY}/${AWS_REPOSITORY}:${IMAGE_TAG} \
+                      ${AWS_REGISTRY}/${AWS_REPOSITORY}:${RC_TAG}
+
+           docker push ${AWS_REGISTRY}/${AWS_REPOSITORY}:${RC_TAG}
