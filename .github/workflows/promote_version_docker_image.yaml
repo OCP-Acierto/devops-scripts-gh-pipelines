@@ -1,0 +1,86 @@
+name: Promote Version Docker Image
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+      rc_tag:
+        required: true
+        type: string
+      project_code:
+        required: true
+        type: string
+      aws_registry_non_prod:
+        required: true
+        type: string
+      aws_registry_prod:
+        required: true
+        type: string
+    secrets:
+    aws_access_key_id_prod:
+      required: true
+    aws_secret_access_key_prod:
+      required: true
+    aws_secret_access_key_non_prod:
+      required: true
+    aws_access_key_id_non_pro:
+      required: true
+env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  RC_TAG: ${{ inputs.rc_tag }}
+  PROJECT_CODE: ${{ inputs.project_code }}
+  AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry }}
+  AWS_REGISTRY_PROD: ${{ inputs.aws_registry }}
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials NON-PROD
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR NON-PROD
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Check that Docker image is pushed to ECR Registry
+        run: |
+          if [ "$(aws ecr list-images --repository-name ${PROJECT_CODE} | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
+            echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment";
+          else
+            echo "[ERROR] Docker Image with tag ${IMAGE_TAG} doesn't exist!, exit deployment";
+            exit 1
+          fi
+
+      - name: Promoting Docker image with Release Candidate ${RC_TAG}
+        run: |
+           docker pull ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${IMAGE_TAG}
+
+           docker tag ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${IMAGE_TAG} \
+                      ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${RC_TAG}
+
+           docker push ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${RC_TAG}
+
+
+      - name: Configure AWS Credentials PROD
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id_prod }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_prod }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR PROD
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Promoting Docker image with Release Candidate ${RC_TAG}
+        run: |
+           docker pull ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${IMAGE_TAG}
+
+           docker tag ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${IMAGE_TAG} \
+                      ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${RC_TAG}
+
+           docker push ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${RC_TAG}
