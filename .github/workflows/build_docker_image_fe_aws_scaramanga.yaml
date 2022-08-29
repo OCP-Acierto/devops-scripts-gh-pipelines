@@ -88,7 +88,7 @@ jobs:
                   allow tests to fail, exit with errlvl 1"
             exit 1
           else
-            echo "[INFO] Tests Passed successfully, continue"
+            echo "[INFO] Tests Passed successfully with ${num_failed_tests} failed, continue"
           fi
 
           if  (( $(echo "$coverage > $MIN_PERCENTAGE_COVERAGE" | bc -l) )); then
