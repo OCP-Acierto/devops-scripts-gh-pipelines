@@ -91,7 +91,7 @@ jobs:
             echo "[INFO] Tests Passed successfully, continue"
           fi
 
-          if [ "${coverage}" -ge "${MIN_PERCENTAGE_COVERAGE}" ]; then
+          if  (( $(echo "$coverage > $MIN_PERCENTAGE_COVERAGE" | bc -l) )); then
             echo "[INFO] Coverage passed successfully with ${coverage}%, continue"
           else
             echo "[ERROR] Coverage ${coverage} is less than the minimum of ${MIN_PERCENTAGE_COVERAGE},
