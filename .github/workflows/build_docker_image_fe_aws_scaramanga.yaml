@@ -77,7 +77,7 @@ jobs:
           yarn --frozen-lockfile --no-progress
           
           node node_modules/vitest/vitest.mjs  run --coverage \
-                     --reporter=json --outputFile=test.json > coverage.txt
+                     --reporter=json --outputFile=test.json | tee coverage.txt
 
           coverage=$(echo coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
 
