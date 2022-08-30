@@ -50,6 +50,7 @@ env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
   AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry_non_prod }}
+  AWS_REGISTRY_STAGE: ${{ inputs.aws_registry_stage }}
   AWS_REPOSITORY: ${{ inputs.aws_repository }}
   DOCKER_FILE: ${{ inputs.docker_file }}
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
@@ -103,6 +104,8 @@ jobs:
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
+            --tag ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG} \
+            --tag ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
 
       - name: Push image to AWS ECR PROD
