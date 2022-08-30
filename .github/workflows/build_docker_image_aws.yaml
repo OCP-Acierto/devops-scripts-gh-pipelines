@@ -14,6 +14,10 @@ on:
         default: ''
         required: true
         type: string
+      aws_registry_stage:
+        default: ''
+        required: true
+        type: string
       aws_repository:
         required: true
         type: string
@@ -26,6 +30,10 @@ on:
         required: false
         type: string
     secrets:
+      aws_access_key_id_stage:
+        required: true
+      aws_secret_access_key_stage:
+        required: false
       aws_access_key_id_non_prod:
         required: true
       aws_secret_access_key_non_prod:
@@ -116,3 +124,18 @@ jobs:
         run: |
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
+
+      - name: Configure AWS Credentials STAGE
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id_stage }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_stage }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR STAGE
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push image to AWS ECR STAGE
+        run: |
+          docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest
