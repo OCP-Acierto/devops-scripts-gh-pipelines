@@ -16,7 +16,7 @@ on:
         type: string
       aws_registry_stage:
         default: ''
-        required: true
+        required: false
         type: string
       aws_repository:
         required: true
