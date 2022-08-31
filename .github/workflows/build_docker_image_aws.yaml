@@ -16,7 +16,7 @@ on:
         type: string
       aws_registry_stage:
         default: ''
-        required: false
+        required: true
         type: string
       aws_repository:
         required: true
@@ -31,9 +31,9 @@ on:
         type: string
     secrets:
       aws_access_key_id_stage:
-        required: false
+        required: true
       aws_secret_access_key_stage:
-        required: false
+        required: true
       aws_access_key_id_non_prod:
         required: true
       aws_secret_access_key_non_prod:
