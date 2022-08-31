@@ -31,17 +31,17 @@ on:
         type: string
     secrets:
       aws_access_key_id_stage:
-        required: true
+        required: false
       aws_secret_access_key_stage:
         required: false
       aws_access_key_id_non_prod:
         required: true
       aws_secret_access_key_non_prod:
-        required: false
+        required: true
       aws_access_key_id_prod:
         required: true
       aws_secret_access_key_prod:
-        required: false
+        required: true
       gh_npm_registry_pat:
         required: false
       ocp_packages_actions_role:
