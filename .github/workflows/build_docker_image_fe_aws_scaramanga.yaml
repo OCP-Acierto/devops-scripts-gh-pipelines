@@ -42,6 +42,10 @@ on:
         required: false
         type: string
     secrets:
+      aws_access_key_id_stage:
+        required: true
+      aws_secret_access_key_stage:
+        required: true
       aws_access_key_id_non_prod:
         required: false
       aws_secret_access_key_non_prod:
