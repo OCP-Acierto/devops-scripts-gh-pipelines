@@ -50,9 +50,12 @@ jobs:
 
       - name: Promoting Docker image with Release Candidate ${RC_TAG}
         run: |
-           docker pull ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}
+          echo "[INFO] Pull Docker Image with tag ${IMAGE_TAG}"
+          docker pull ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}
 
-           docker tag ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG} \
-                      ${AWS_REGISTRY}/${PROJECT_CODE}:${RC_TAG}
+          echo "[INFO] Tag Docker Image with tag ${RC_TAG}""
+          docker tag ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG} \
+                     ${AWS_REGISTRY}/${PROJECT_CODE}:${RC_TAG}
 
-           docker push ${AWS_REGISTRY}/${PROJECT_CODE}:${RC_TAG}
+          echo "[INFO] Push Docker Image"
+          docker push ${AWS_REGISTRY}/${PROJECT_CODE}:${RC_TAG}
