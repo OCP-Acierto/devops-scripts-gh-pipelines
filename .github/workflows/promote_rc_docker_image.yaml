@@ -53,7 +53,7 @@ jobs:
           echo "[INFO] Pull Docker Image with tag ${IMAGE_TAG}"
           docker pull ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}
 
-          echo "[INFO] Tag Docker Image with tag ${RC_TAG}""
+          echo "[INFO] Tag Docker Image with tag ${RC_TAG}"
           docker tag ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG} \
                      ${AWS_REGISTRY}/${PROJECT_CODE}:${RC_TAG}
 
