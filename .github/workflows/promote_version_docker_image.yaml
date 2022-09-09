@@ -5,7 +5,7 @@ on:
       image_tag:
         required: true
         type: string
-      rc_tag:
+      version_tag:
         required: true
         type: string
       project_code:
@@ -24,14 +24,14 @@ on:
       required: true
     aws_secret_access_key_non_prod:
       required: true
-    aws_access_key_id_non_pro:
+    aws_access_key_id_non_prod:
       required: true
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
-  RC_TAG: ${{ inputs.rc_tag }}
+  VERSION_TAG: ${{ inputs.version_tag }}
   PROJECT_CODE: ${{ inputs.project_code }}
-  AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry }}
-  AWS_REGISTRY_PROD: ${{ inputs.aws_registry }}
+  AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry_non_prod }}
+  AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
 jobs:
   job:
     timeout-minutes: 30
@@ -56,14 +56,17 @@ jobs:
             exit 1
           fi
 
-      - name: Promoting Docker image with Release Candidate ${RC_TAG}
+      - name: Promoting Docker image with Version NON-PROD
         run: |
-           docker pull ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${IMAGE_TAG}
+          echo "[INFO] Pull Docker Image with tag ${IMAGE_TAG}"
+          docker pull ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${IMAGE_TAG}
 
-           docker tag ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${IMAGE_TAG} \
-                      ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${RC_TAG}
+          echo "[INFO] Tag Docker Image with tag ${VERSION_TAG}"
+          docker tag ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${IMAGE_TAG} \
+                     ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${VERSION_TAG}
 
-           docker push ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${RC_TAG}
+          echo "[INFO] Push Docker Image"
+          docker push ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${VERSION_TAG}
 
 
       - name: Configure AWS Credentials PROD
@@ -76,11 +79,14 @@ jobs:
       - name: Login to Amazon ECR PROD
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Promoting Docker image with Release Candidate ${RC_TAG}
+      - name: Promoting Docker image with Version PROD
         run: |
-           docker pull ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${IMAGE_TAG}
+          echo "[INFO] Pull Docker Image with tag ${IMAGE_TAG}"
+          docker pull ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${IMAGE_TAG}
 
-           docker tag ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${IMAGE_TAG} \
-                      ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${RC_TAG}
+          echo "[INFO] Tag Docker Image with tag ${VERSION_TAG}"
+          docker tag ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${IMAGE_TAG} \
+                     ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${VERSION_TAG}
 
-           docker push ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${RC_TAG}
+          echo "[INFO] Push Docker Image"
+          docker push ${AWS_REGISTRY_PROD}/${PROJECT_CODE}:${VERSION_TAG}

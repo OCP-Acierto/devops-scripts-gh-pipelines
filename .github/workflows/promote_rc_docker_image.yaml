@@ -11,29 +11,39 @@ on:
       project_code:
         required: true
         type: string
-      aws_registry:
+      aws_registry_non_prod:
+        default: ''
+        required: true
+        type: string
+      aws_registry_stage:
+        default: ''
         required: true
         type: string
     secrets:
-      aws_access_key_id:
+      aws_access_key_id_stage:
         required: true
-      aws_secret_access_key:
+      aws_secret_access_key_stage:
+        required: true
+      aws_access_key_id_non_prod:
+        required: true
+      aws_secret_access_key_non_prod:
         required: true
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   RC_TAG: ${{ inputs.rc_tag }}
   PROJECT_CODE: ${{ inputs.project_code }}
-  AWS_REGISTRY: ${{ inputs.aws_registry }}
+  AWS_REGISTRY_STAGE: ${{ inputs.aws_registry_stage }}
+  AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry_non_prod }}
 jobs:
   job:
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials STAGE
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.aws_access_key_id }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-access-key-id: ${{ secrets.aws_access_key_id_stage }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_stage }}
           aws-region: eu-west-1
 
       - name: Check that Docker image is pushed to ECR Registry
@@ -45,17 +55,40 @@ jobs:
             exit 1
           fi
 
-      - name: Login to Amazon ECR
+      - name: Login to Amazon ECR STAGE
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Promoting Docker image with Release Candidate ${RC_TAG}
+      - name: Promoting Docker image with Release Candidate to STAGE
         run: |
           echo "[INFO] Pull Docker Image with tag ${IMAGE_TAG}"
-          docker pull ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG}
+          docker pull ${AWS_REGISTRY_STAGE}/${PROJECT_CODE}:${IMAGE_TAG}
 
           echo "[INFO] Tag Docker Image with tag ${RC_TAG}"
-          docker tag ${AWS_REGISTRY}/${PROJECT_CODE}:${IMAGE_TAG} \
-                     ${AWS_REGISTRY}/${PROJECT_CODE}:${RC_TAG}
+          docker tag ${AWS_REGISTRY_STAGE}/${PROJECT_CODE}:${IMAGE_TAG} \
+                     ${AWS_REGISTRY_STAGE}/${PROJECT_CODE}:${RC_TAG}
 
           echo "[INFO] Push Docker Image"
-          docker push ${AWS_REGISTRY}/${PROJECT_CODE}:${RC_TAG}
+          docker push ${AWS_REGISTRY_STAGE}/${PROJECT_CODE}:${RC_TAG}
+
+
+      - name: Configure AWS Credentials NON-PROD
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR NON-PROD
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Promoting Docker image with Release Candidate to NON-PROD
+        run: |
+          echo "[INFO] Pull Docker Image with tag ${IMAGE_TAG}"
+          docker pull ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${IMAGE_TAG}
+
+          echo "[INFO] Tag Docker Image with tag ${RC_TAG}"
+          docker tag ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${IMAGE_TAG} \
+                     ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${RC_TAG}
+
+          echo "[INFO] Push Docker Image"
+          docker push ${AWS_REGISTRY_NON_PROD}/${PROJECT_CODE}:${RC_TAG}
