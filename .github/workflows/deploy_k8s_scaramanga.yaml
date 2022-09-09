@@ -98,6 +98,7 @@ jobs:
           done
 
           export $(cat env_file | xargs)
+          echo "[INFO] Create Configmap with envfile ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env"
           envsubst < ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env > env_file_k8s
 
           kubectl create configmap "${PROJECT_CODE}-env" \
