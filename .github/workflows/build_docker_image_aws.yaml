@@ -59,6 +59,7 @@ env:
   AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
   AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry_non_prod }}
   AWS_REGISTRY_STAGE: ${{ inputs.aws_registry_stage }}
+  AWS_REGISTRY_LAB: ${{ inputs.aws_registry_lab }}
   AWS_REPOSITORY: ${{ inputs.aws_repository }}
   DOCKER_FILE: ${{ inputs.docker_file }}
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
