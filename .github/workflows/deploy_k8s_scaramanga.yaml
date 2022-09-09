@@ -89,6 +89,8 @@ jobs:
 
           FILTER="Key=name,Values=${DEPLOY_ENV}/${PROJECT_CODE}"
           for secret in $(aws secretsmanager list-secrets --filters ${FILTER} --output json | jq .SecretList[].Name -r); do
+
+            echo "[INFO] Get Secret vaule for ${env_name[2]^^}"
             value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
 
             IFS='/' read -r -a env_name <<< "$secret"
