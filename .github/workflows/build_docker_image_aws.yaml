@@ -6,6 +6,10 @@ on:
         default: 'latest'
         required: true
         type: string
+      aws_registry_lab:
+        default: ''
+        required: false
+        type: string
       aws_registry_stage:
         default: ''
         required: false
@@ -30,6 +34,10 @@ on:
         required: false
         type: string
     secrets:
+      aws_access_key_id_lab:
+        required: false
+      aws_secret_access_key_lab:
+        required: false
       aws_access_key_id_stage:
         required: false
       aws_secret_access_key_stage:
@@ -109,6 +117,8 @@ jobs:
             ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest" } \
             ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest" } \
             --file ${DOCKER_FILE} .
 
       - name: Push image to AWS ECR PROD
@@ -116,6 +126,7 @@ jobs:
         run: |
           docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
+
 
       - name: Configure AWS Credentials NON-PROD
         uses: aws-actions/configure-aws-credentials@v1
@@ -135,6 +146,7 @@ jobs:
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
 
+
       - name: Configure AWS Credentials STAGE
         if: ${{ env.AWS_REGISTRY_STAGE != '' }}
         uses: aws-actions/configure-aws-credentials@v1
@@ -152,3 +164,22 @@ jobs:
         run: |
           docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest
+
+
+      - name: Configure AWS Credentials LAB
+        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id_lab }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_lab }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR LAB
+        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push image to AWS ECR LAB
+        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        run: |
+          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest
