@@ -6,17 +6,17 @@ on:
         default: 'latest'
         required: true
         type: string
-      aws_registry_prod:
+      aws_registry_stage:
         default: ''
-        required: true
+        required: false
         type: string
       aws_registry_non_prod:
         default: ''
-        required: true
+        required: false
         type: string
-      aws_registry_stage:
+      aws_registry_prod:
         default: ''
-        required: true
+        required: false
         type: string
       aws_repository:
         required: true
@@ -31,13 +31,13 @@ on:
         type: string
     secrets:
       aws_access_key_id_stage:
-        required: true
+        required: false
       aws_secret_access_key_stage:
-        required: true
+        required: false
       aws_access_key_id_non_prod:
-        required: true
+        required: false
       aws_secret_access_key_non_prod:
-        required: true
+        required: false
       aws_access_key_id_prod:
         required: true
       aws_secret_access_key_prod:
@@ -96,39 +96,47 @@ jobs:
 
       - name: Build & tag image to AWS ECR
         run: |
+
+          CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
+          echo "[INFO] Build docker images with conditional parameters"
           docker build \
-            ${DOCKER_BUILD_ARGS} \
-            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
-            --build-arg CODEARTIFACT_AUTH_TOKEN=${{ env.CODEARTIFACT_AUTH_TOKEN }} \
-            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
-            --tag ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest \
+            ${DOCKER_BUILD_ARGS:+ ${DOCKER_BUILD_ARGS} } \
+            ${GH_NPM_REGISTRY_PAT:+     --build-arg "GH_NPM_REGISTRY_PAT=${GH_NPM_REGISTRY_PAT}" } \
+            ${CODEARTIFACT_AUTH_TOKEN:+ --build-arg "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}" } \
+            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest" } \
             --file ${DOCKER_FILE} .
 
       - name: Push image to AWS ECR PROD
+        if: ${{ env.AWS_REGISTRY_PROD != '' }}
         run: |
           docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
 
       - name: Configure AWS Credentials NON-PROD
         uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR NON-PROD
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push image to AWS ECR NON-PROD
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
         run: |
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
 
       - name: Configure AWS Credentials STAGE
+        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_stage }}
@@ -136,9 +144,11 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR STAGE
+        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push image to AWS ECR STAGE
+        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
         run: |
           docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest
