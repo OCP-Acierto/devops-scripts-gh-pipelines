@@ -25,14 +25,14 @@ on:
         required: true
       aws_secret_access_key_stage:
         required: true
-    aws_secret_access_key_non_prod:
-      required: true
-    aws_access_key_id_non_prod:
-      required: true
-    aws_access_key_id_prod:
-      required: true
-    aws_secret_access_key_prod:
-      required: true
+      aws_secret_access_key_non_prod:
+        required: true
+      aws_access_key_id_non_prod:
+        required: true
+      aws_access_key_id_prod:
+        required: true
+      aws_secret_access_key_prod:
+        required: true
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   VERSION_TAG: ${{ inputs.version_tag }}
