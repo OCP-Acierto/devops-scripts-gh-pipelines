@@ -152,10 +152,11 @@ jobs:
         run: |
 
           CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
+          GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}"
           echo "[INFO] Build docker images with conditional parameters"
           docker build \
             ${DOCKER_BUILD_ARGS:+ ${DOCKER_BUILD_ARGS} } \
-            ${GH_NPM_REGISTRY_PAT:+     --build-arg "GH_NPM_REGISTRY_PAT=${{ secrets.gh_npm_registry_pat }}" } \
+            ${GH_NPM_REGISTRY_PAT:+     --build-arg "GH_NPM_REGISTRY_PAT=${GH_NPM_REGISTRY_PAT}" } \
             ${CODEARTIFACT_AUTH_TOKEN:+ --build-arg "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}" } \
             ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest" } \
