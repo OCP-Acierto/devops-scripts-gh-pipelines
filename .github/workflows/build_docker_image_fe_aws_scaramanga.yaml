@@ -41,10 +41,6 @@ on:
         default: '80'
         required: false
         type: string
-      tests_vitest:
-        default: 'false'
-        required: false
-        type: string
     secrets:
       aws_access_key_id_lab:
         required: true
@@ -75,7 +71,6 @@ env:
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
-  TESTS_VITEST: ${{ inputs.tests_vitest }}
 jobs:
   job:
     timeout-minutes: 30
@@ -86,37 +81,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Execute UnitTests for vitest
-        env:
-          GH_NPM_REGISTRY_PAT: "${{ secrets.gh_npm_registry_pat }}"
-        if: ${{ env.TESTS_VITEST == 'true' }}
-        run: |
-          yarn --frozen-lockfile --no-progress
-          
-          node node_modules/vitest/vitest.mjs  run --coverage \
-                     --reporter=json --outputFile=test.json | tee coverage.txt
-
-          coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
-
-          num_failed_tests=$(cat test.json | jq .numFailedTests)
-
-          if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
-            echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS} 
-                  allow tests to fail, exit with errlvl 1"
-            exit 1
-          else
-            echo "[INFO] Tests Passed successfully with ${num_failed_tests} failed, continue"
-          fi
-
-          if  (( $(echo "$coverage > $MIN_PERCENTAGE_COVERAGE" | bc -l) )); then
-            echo "[INFO] Coverage passed successfully with ${coverage}%, continue"
-          else
-            echo "[ERROR] Coverage ${coverage} is less than the minimum of ${MIN_PERCENTAGE_COVERAGE},
-                  exit with errlvl 1"
-            exit 1
-          fi
-
 
       - name: Configure AWS Credentials LAB
         uses: aws-actions/configure-aws-credentials@v1
