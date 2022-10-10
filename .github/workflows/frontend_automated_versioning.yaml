@@ -13,8 +13,9 @@ jobs:
 
       - name: Update Package.json Version
         run: |
+          GIT_COMMENT="$(git log -1 --pretty=format:"%s")"
+
           PACKAGE_VERSION=$(jq .version package.json -r)
-          GIT_COMMENT="${{ github.event.head_commit.message }}"
           echo "[INFO] Trying to parse Git comment: ${GIT_COMMENT}"
 
           MAJOR_NUMBER=$(echo "${PACKAGE_VERSION}" | awk -F'.' '{print $1}')
@@ -22,13 +23,13 @@ jobs:
           PATCH_NUMBER=$(echo "${PACKAGE_VERSION}" | awk -F'.' '{print $3}')
 
           if [ "$(echo "${GIT_COMMENT}" | grep 'MAJOR'  -c)" -eq 1 ]; then
-              NUMBER_VERSION="$(( "${MAJOR_NUMBER}"+1)).0.0"
+              NUMBER_VERSION="$(("${MAJOR_NUMBER}"+1)).0.0"
               echo "[INFO] Updating package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
           elif [ "$(echo "${GIT_COMMENT}" | grep 'MINOR' -c)" -eq 1 ]; then
-            NUMBER_VERSION="${MAJOR_NUMBER}.$(( "${MINOR_NUMBER}"+1)).0"
+            NUMBER_VERSION="${MAJOR_NUMBER}.$(("${MINOR_NUMBER}"+1)).0"
             echo "[INFO] Updating package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
           else
-            NUMBER_VERSION="${MAJOR_NUMBER}.0.$(( "${PATCH_NUMBER}"+1))"
+            NUMBER_VERSION="${MAJOR_NUMBER}.${MAJOR_NUMBER}.$(("${PATCH_NUMBER}"+1))"
             echo "[INFO] Updating package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
           fi
 
