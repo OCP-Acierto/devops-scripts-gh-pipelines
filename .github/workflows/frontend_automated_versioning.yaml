@@ -1,9 +1,6 @@
 name: Update Package.json Version
 on:
   workflow_call:
-    secrets:
-      gh_npm_registry_pat:
-        required: true
 jobs:
   job:
     timeout-minutes: 30
