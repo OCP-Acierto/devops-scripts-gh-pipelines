@@ -8,11 +8,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Update Package.json Version
         run: |
           PACKAGE_VERSION=$(jq .version package.json -r)
           GIT_COMMENT="${{ github.event.head_commit.message }}"
+          echo "[INFO] Trying to parse Git comment: ${GIT_COMMENT}"
 
           MAJOR_NUMBER=$(echo "${PACKAGE_VERSION}" | awk -F'.' '{print $1}')
           MINOR_NUMBER=$(echo "${PACKAGE_VERSION}" | awk -F'.' '{print $2}')
