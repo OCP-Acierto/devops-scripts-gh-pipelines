@@ -24,13 +24,13 @@ jobs:
 
           if [ "$(echo "${GIT_COMMENT}" | grep 'MAJOR'  -c)" -eq 1 ]; then
               NUMBER_VERSION="$(("${MAJOR_NUMBER}"+1)).0.0"
-              echo "[INFO] Updating package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
+              echo "[INFO] Updating MAJOR in package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
           elif [ "$(echo "${GIT_COMMENT}" | grep 'MINOR' -c)" -eq 1 ]; then
             NUMBER_VERSION="${MAJOR_NUMBER}.$(("${MINOR_NUMBER}"+1)).0"
-            echo "[INFO] Updating package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
+            echo "[INFO] Updating MINOR in package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
           else
-            NUMBER_VERSION="${MAJOR_NUMBER}.${MAJOR_NUMBER}.$(("${PATCH_NUMBER}"+1))"
-            echo "[INFO] Updating package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
+            NUMBER_VERSION="${MAJOR_NUMBER}.${MINOR_NUMBER}.$(("${PATCH_NUMBER}"+1))"
+            echo "[INFO] Updating PAtCH in package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
           fi
 
           jq ".version = \"${NUMBER_VERSION}\"" package.json > package.json.tmp
