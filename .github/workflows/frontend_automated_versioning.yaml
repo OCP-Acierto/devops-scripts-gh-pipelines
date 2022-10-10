@@ -1,10 +1,15 @@
 name: Update Package.json Version
 on:
   workflow_call:
+    secrets:
+      gh_npm_registry_pat:
+        required: true
 jobs:
   job:
     timeout-minutes: 30
     runs-on: ubuntu-latest
+    env:
+      GH_NPM_REGISTRY_PAT: "${{ secrets.gh_npm_registry_pat }}"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
