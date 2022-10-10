@@ -1,0 +1,41 @@
+name: Update Package.json Version
+on:
+  workflow_call:
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Update Package.json Version
+        run: |
+          PACKAGE_VERSION=$(jq .version package.json -r)
+          GIT_COMMENT="${{ github.event.head_commit.message }}"
+
+          MAJOR_NUMBER=$(echo "${PACKAGE_VERSION}" | awk -F'.' '{print $1}')
+          MINOR_NUMBER=$(echo "${PACKAGE_VERSION}" | awk -F'.' '{print $2}')
+          PATCH_NUMBER=$(echo "${PACKAGE_VERSION}" | awk -F'.' '{print $3}')
+
+          if [ "$(echo "${GIT_COMMENT}" | grep 'MAJOR'  -c)" -eq 1 ]; then
+              NUMBER_VERSION="$(( "${MAJOR_NUMBER}"+1)).0.0"
+              echo "[INFO] Updating package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
+          elif [ "$(echo "${GIT_COMMENT}" | grep 'MINOR' -c)" -eq 1 ]; then
+            NUMBER_VERSION="${MAJOR_NUMBER}.$(( "${MINOR_NUMBER}"+1)).0"
+            echo "[INFO] Updating package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
+          else
+            NUMBER_VERSION="${MAJOR_NUMBER}.0.$(( "${PATCH_NUMBER}"+1))"
+            echo "[INFO] Updating package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
+          fi
+
+          jq ".version = \"${NUMBER_VERSION}\"" package.json > package.json.tmp
+          cat "package.json.tmp" > package.json
+          rm -f package.json.tmp 
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: Update Package.json Version
+          committer_name: GitHub Actions
+          committer_email: actions@github.com
