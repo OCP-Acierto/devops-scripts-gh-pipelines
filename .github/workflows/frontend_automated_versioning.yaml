@@ -30,7 +30,7 @@ jobs:
             echo "[INFO] Updating MINOR in package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
           else
             NUMBER_VERSION="${MAJOR_NUMBER}.${MINOR_NUMBER}.$(("${PATCH_NUMBER}"+1))"
-            echo "[INFO] Updating PAtCH in package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
+            echo "[INFO] Updating PATCH in package.json from ${PACKAGE_VERSION} to ${NUMBER_VERSION}"
           fi
 
           jq ".version = \"${NUMBER_VERSION}\"" package.json > package.json.tmp
