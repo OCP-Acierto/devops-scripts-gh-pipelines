@@ -8,13 +8,9 @@ jobs:
   job:
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    env:
-      GH_NPM_REGISTRY_PAT: "${{ secrets.gh_npm_registry_pat }}"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Update Package.json Version
         run: |
@@ -42,9 +38,13 @@ jobs:
           cat "package.json.tmp" > package.json
           rm -f package.json.tmp 
 
+      - name: setup git config
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
       - name: Commit changes
-        uses: EndBug/add-and-commit@v9
-        with:
-          message: Update Package.json Version
-          committer_name: GitHub Actions
-          committer_email: actions@github.com
+        run: |
+
+          git commit -am "Update Package.json Version"
+          git push --force
