@@ -31,4 +31,4 @@ jobs:
       - name: Push Static Files to S3 bucket
         run: |
           echo "[INFO] Copy contents from src/assets/resources/images/* to S3"
-          aws s3 sync src/assets/resources/images/* ${AWS_S3_BUCKET} --delete
+          aws s3 sync src/assets/resources/images/ ${AWS_S3_BUCKET} --delete
