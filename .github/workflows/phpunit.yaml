@@ -50,6 +50,10 @@ on:
         required: false
       mysql_pass:
         required: false
+      leabank_public_key:
+        required: false
+      leabank_private_key:
+        required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
@@ -60,6 +64,8 @@ env:
   PHPUNIT_MYSQL: ${{ inputs.phpunit_mysql }}
   PHPUNIT_ELASTICSEARCH: ${{ inputs.phpunit_elasticsearch }}
   PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
+  LEABANK_PUBLIC_KEY: ${{ inputs.leabank_public_key }}
+  LEABANK_PRIVATE_KEY: ${{ inputs.leabank_private_key }}
 jobs:
   job:
     timeout-minutes: 30
@@ -96,7 +102,7 @@ jobs:
               -e MONGO_INITDB_ROOT_PASSWORD=secret  \
               ${PHPUNIT_MONGODB}
           fi
-        
+
           if [ ! -z "${PHPUNIT_REDIS}" ]; then
             docker run -tid --rm --name redis --network phpunit-test \
             ${PHPUNIT_REDIS}
@@ -117,10 +123,19 @@ jobs:
             ${PHPUNIT_ELASTICSEARCH}
           fi
 
+          LEABANK_MOUNT_FILE=""
+          if [ ! -z "${LEABANK_PUBLIC_KEY}" ]; then
+            echo ${LEABANK_PUBLIC_KEY} > leabank-key-public.pem
+            echo ${LEABANK_PRIVATE_KEY} > leabank-key.pem
+            LEABANK_MOUNT_FILE="true"
+          fi
+
           docker run -t --rm --workdir /app --network phpunit-test \
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/clover:/opt/clover" \
               -v "$(pwd)/config-management:/config-management" \
+              ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key-public.pem:/app/storage/certificates/leabank-key-public.pem" } \
+              ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
               "${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}" \
               /bin/bash -e -c "echo Install PHP testing tools && \
               apt-get update && apt-get -qq install -y php7.3-xdebug && \
