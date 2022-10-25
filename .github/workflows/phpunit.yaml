@@ -132,8 +132,8 @@ jobs:
           LEABANK_PRIVATE_KEY='${{ secrets.leabank_private_key }}'
 
           if [ ! -z "${LEABANK_PUBLIC_KEY}" ]; then
-            echo ${LEABANK_PRIVATE_KEY} > leabank-key.pem
-            echo ${LEABANK_PUBLIC_KEY} > leabank-key-public.pem
+            echo "${LEABANK_PRIVATE_KEY}" > leabank-key.pem
+            echo "${LEABANK_PUBLIC_KEY}" > leabank-key-public.pem
             LEABANK_MOUNT_FILE="true"
             echo "[INFO] created leabank public & private pem files from secrets"
           else
