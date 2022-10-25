@@ -128,8 +128,8 @@ jobs:
           fi
 
           LEABANK_MOUNT_FILE=""
-          LEABANK_PUBLIC_KEY=${{ secrets.leabank_public_key }}
-          LEABANK_PRIVATE_KEY=${{ secrets.leabank_private_key }}
+          LEABANK_PUBLIC_KEY='${{ secrets.leabank_public_key }}'
+          LEABANK_PRIVATE_KEY='${{ secrets.leabank_private_key }}'
 
           if [ ! -z "${LEABANK_PUBLIC_KEY}" ]; then
             echo ${LEABANK_PRIVATE_KEY} > leabank-key.pem
