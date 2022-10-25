@@ -64,8 +64,6 @@ env:
   PHPUNIT_MYSQL: ${{ inputs.phpunit_mysql }}
   PHPUNIT_ELASTICSEARCH: ${{ inputs.phpunit_elasticsearch }}
   PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
-  LEABANK_PUBLIC_KEY: ${{ inputs.leabank_public_key }}
-  LEABANK_PRIVATE_KEY: ${{ inputs.leabank_private_key }}
 jobs:
   job:
     timeout-minutes: 30
@@ -124,9 +122,12 @@ jobs:
           fi
 
           LEABANK_MOUNT_FILE=""
+          LEABANK_PUBLIC_KEY=${{ secrets.leabank_public_key }}
+          LEABANK_PRIVATE_KEY=${{ secrets.leabank_private_key }}
+
           if [ ! -z "${LEABANK_PUBLIC_KEY}" ]; then
-            echo ${LEABANK_PUBLIC_KEY} > leabank-key-public.pem
             echo ${LEABANK_PRIVATE_KEY} > leabank-key.pem
+            echo ${LEABANK_PUBLIC_KEY} > leabank-key-public.pem
             LEABANK_MOUNT_FILE="true"
           fi
 
