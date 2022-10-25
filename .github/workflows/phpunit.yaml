@@ -129,6 +129,9 @@ jobs:
             echo ${LEABANK_PRIVATE_KEY} > leabank-key.pem
             echo ${LEABANK_PUBLIC_KEY} > leabank-key-public.pem
             LEABANK_MOUNT_FILE="true"
+            echo "[INFO] created leabank public & private pem files from secrets"
+          else
+            echo "[INFO] Skipping leabank pem files"
           fi
 
           docker run -t --rm --workdir /app --network phpunit-test \
