@@ -41,14 +41,14 @@ jobs:
       - name: Execute UnitTests
         run: |
           node node_modules/vitest/vitest.mjs  run --coverage \
-                     --reporter=json --outputFile=test.json | tee coverage.txt
+                     --reporter=lcov --outputFile=test.json | tee coverage.txt
 
           coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
 
           num_failed_tests=$(cat test.json | jq .numFailedTests)
 
           if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
-            echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS} 
+            echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS}
                   allow tests to fail, exit with errlvl 1"
             exit 1
           else
