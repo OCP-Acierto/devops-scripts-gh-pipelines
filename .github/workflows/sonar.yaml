@@ -69,6 +69,6 @@ jobs:
                       -Dsonar.login=${SONAR_TOKEN} \
                       -Dsonar.sourceEncoding=UTF-8 \
                       -Dsonar.exclusions=**/*spec.ts,**/index.ts \
-                      -Dsonar.coverage.exclusions=**/*spec.ts,**/index.ts,**/*module.ts,**/main.ts,**/*mock.ts,**/config/** \
-                      -Dsonar.javascript.lcov.reportPaths:/opt/coverage/lcov.info \
+                      -Dsonar.coverage.exclusions=**/*spec.ts,**/index.ts \
+                      -Dsonar.javascript.lcov.reportPaths:/opt/coverage/clover.xml \
                   "
