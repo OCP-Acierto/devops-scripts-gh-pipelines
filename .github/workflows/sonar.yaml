@@ -62,7 +62,7 @@ jobs:
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/coverage:/opt/coverage" \
               "${GCP_REGISTRY}/${GCP_REPOSITORY}:latest" \
-              /bin/bash -e -c "ls && /usr/bin/sonar-scanner \
+              /bin/bash -e -c "cd coverage && ls && /usr/bin/sonar-scanner \
                       -Dsonar.projectKey=${PROJECT_CODE} \
                       -Dsonar.sources=. \
                       -Dsonar.host.url=${SONAR_URL} \
