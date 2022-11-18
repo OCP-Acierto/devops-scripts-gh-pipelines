@@ -62,15 +62,7 @@ jobs:
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/coverage:/opt/coverage" \
               "${GCP_REGISTRY}/${GCP_REPOSITORY}:latest" \
-              /bin/bash -e -c "ls && /usr/bin/sonar-scanner \
-                      -Dsonar.projectKey=${PROJECT_CODE} \
-                      -Dsonar.sources=. \
-                      -Dsonar.host.url=${SONAR_URL} \
-                      -Dsonar.login=${SONAR_TOKEN} \
-                      -Dsonar.sourceEncoding=UTF-8 \
-                      -Dsonar.exclusions=**/*spec.ts,**/index.ts \
-                      -Dsonar.coverage.exclusions=**/*spec.ts,**/index.ts \
-                      -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info,coverage/clover.xml \
+              /bin/bash -e -c "ls && cd coverage && ls \
                   "
                   
 
