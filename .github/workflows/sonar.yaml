@@ -60,7 +60,7 @@ jobs:
           docker run --rm --workdir "/app" \
               -v "$(pwd)/:/app/" \
               -v "$(pwd)/jreport:/opt/jreport" \
-              -v "$(pwd)/clover:/opt/clover" \
+              -v "$(pwd)/coverage:/opt/coverage" \
               "${GCP_REGISTRY}/${GCP_REPOSITORY}:latest" \
               /bin/bash -e -c "/usr/bin/sonar-scanner \
                       -Dsonar.projectKey=${PROJECT_CODE} \
@@ -69,4 +69,5 @@ jobs:
                       -Dsonar.login=${SONAR_TOKEN} \
                       -Dsonar.sourceEncoding=UTF-8 \
                       -Dsonar.exclusions=**/*spec.ts,**/index.ts,**/*module.ts
+                      -Dsonar.typescript.lcov.reportPaths": "/opt/coverage/lcov.info"
                   "
