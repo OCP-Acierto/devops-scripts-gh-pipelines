@@ -68,5 +68,5 @@ jobs:
                       -Dsonar.host.url=${SONAR_URL} \
                       -Dsonar.login=${SONAR_TOKEN} \
                       -Dsonar.sourceEncoding=UTF-8 \
-                      -Dsonar.exclusions=**/*spec.ts
+                      -Dsonar.exclusions=**/*spec.ts,**/index.ts,**/*module.ts
                   "
