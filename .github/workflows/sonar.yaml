@@ -70,5 +70,5 @@ jobs:
                       -Dsonar.sourceEncoding=UTF-8 \
                       -Dsonar.exclusions=**/*spec.ts,**/index.ts \
                       -Dsonar.coverage.exclusions=**/*spec.ts,**/index.ts \
-                      -Dsonar.javascript.lcov.reportPaths:./coverage/ \
+                      -Dsonar.javascript.lcov.reportPaths:./coverage/lcov.info \
                   "
