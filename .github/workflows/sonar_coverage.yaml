@@ -1,0 +1,92 @@
+name: Sonar Scanner
+on:
+  workflow_call:
+    inputs:
+      project_code:
+        required: true
+        type: string
+      gcp_registry:
+        default: 'eu.gcr.io/internal-cdm/images'
+        required: true
+        type: string
+      gcp_repository:
+        required: true
+        type: string
+      docker_file:
+        default: 'Dockerfile'
+        required: true
+        type: string
+      docker_build_args:
+        default: ''
+        required: false
+        type: string
+      coverage_command:
+        default: ''
+        required: true
+        type: string
+    secrets:
+      gcp_cdm_registry_sa_credentials:
+        required: true
+      sonar_token:
+        required: true
+      sonar_url:
+        required: true
+env:
+  GCP_REGISTRY: ${{ inputs.gcp_registry }}
+  GCP_REPOSITORY: ${{ inputs.gcp_repository }}
+  PROJECT_CODE: ${{ inputs.project_code }}
+  SONAR_URL: ${{ secrets.sonar_url }}
+  SONAR_TOKEN: ${{ secrets.sonar_token }}
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure GCP Credentials
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.gcp_cdm_registry_sa_credentials }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: internal-cdm
+
+      - name: Configure Docker Credentials
+        run: |
+          gcloud auth configure-docker --quiet
+
+      - name: Yarn Install
+        env:
+          NODE_OPTIONS: "--max_old_space_size=6144"
+        run: |
+          yarn --frozen-lockfile --no-progress
+
+      - name: Coverage
+        env:
+          NODE_OPTIONS: "--max_old_space_size=6144"
+        run: |
+          ${coverage_command}
+
+      - name: Sonar Scanner Execution
+        run: |
+          docker run --rm --workdir "/app" \
+              -v "$(pwd)/:/app/" \
+              -v "$(pwd)/jreport:/opt/jreport" \
+              -v "$(pwd)/coverage:/opt/coverage" \
+              "${GCP_REGISTRY}/${GCP_REPOSITORY}:latest" \
+              /bin/bash -e -c "ls && /usr/bin/sonar-scanner \
+                      -Dsonar.projectKey=${PROJECT_CODE} \
+                      -Dsonar.sources=. \
+                      -Dsonar.host.url=${SONAR_URL} \
+                      -Dsonar.login=${SONAR_TOKEN} \
+                      -Dsonar.sourceEncoding=UTF-8 \
+                      -Dsonar.exclusions=**/*spec.ts,**/index.ts \
+                      -Dsonar.exclusions=public/** \
+                      -Dsonar.coverageReportPaths=.coverage/clover.xml
+                  "
+                  
+
