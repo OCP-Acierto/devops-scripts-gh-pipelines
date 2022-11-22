@@ -31,6 +31,8 @@ on:
         required: true
       sonar_url:
         required: true
+      gh_npm_registry_pat:
+        required: false
 env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
