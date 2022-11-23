@@ -55,6 +55,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Configure AWS credentials OCP-ARTIFACTS
+        uses: aws-actions/configure-aws-credentials@v1
+        env:
+          TOKEN: ${{ secrets.ocp_packages_actions_role }}
+        if: ${{ env.TOKEN != '' }}
+        with:
+          role-to-assume: ${{ secrets.ocp_packages_actions_role }}
+          role-session-name: githubactions
+          aws-region: eu-west-1
+
+      - name: Authenticate to CodeArtifact
+        env:
+          TOKEN: ${{ secrets.ocp_packages_actions_role }}
+        if: ${{ env.TOKEN != '' }}
+        run: |
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bauer-ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text)
+          echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
+          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v0
         with:
