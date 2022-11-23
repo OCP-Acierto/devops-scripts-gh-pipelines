@@ -113,7 +113,7 @@ jobs:
                       -Dsonar.host.url=${SONAR_URL} \
                       -Dsonar.login=${SONAR_TOKEN} \
                       -Dsonar.sourceEncoding=UTF-8 \
-                      -Dsonar.coverage.exclusions=**/*spec.ts,**/**/*spec.ts,**/index.ts \
+                      -Dsonar.coverage.exclusions=**/*spec.ts,**/**/*spec.ts,**/index.ts,**/*mock.ts,**/__mocks__/* \
                       -Dsonar.exclusions=public/** \
                       -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
                   "
