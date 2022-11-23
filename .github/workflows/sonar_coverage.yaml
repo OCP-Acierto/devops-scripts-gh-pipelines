@@ -70,7 +70,7 @@ jobs:
           gcloud auth configure-docker --quiet
 
       - name: Yarn Install
-        if: $TEST_ENABLED == 'true'
+        if: ${{ env.TEST_ENABLED == 'true' }}
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
         run: |
