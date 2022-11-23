@@ -74,6 +74,20 @@ jobs:
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
+      - name: Yarn Install
+        if: ${{ env.TEST_ENABLED == 'true' }}
+        env:
+          NODE_OPTIONS: "--max_old_space_size=6144"
+        run: |
+          CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
+          yarn --frozen-lockfile --no-progress
+
+      - name: Coverage
+        env:
+          NODE_OPTIONS: "--max_old_space_size=6144"
+        run: |
+          ${COMMAND} || true
+
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v0
         with:
@@ -87,19 +101,6 @@ jobs:
       - name: Configure Docker Credentials
         run: |
           gcloud auth configure-docker --quiet
-
-      - name: Yarn Install
-        if: ${{ env.TEST_ENABLED == 'true' }}
-        env:
-          NODE_OPTIONS: "--max_old_space_size=6144"
-        run: |
-          yarn --frozen-lockfile --no-progress
-
-      - name: Coverage
-        env:
-          NODE_OPTIONS: "--max_old_space_size=6144"
-        run: |
-          ${COMMAND} || true
 
       - name: Sonar Scanner Execution
         run: |
