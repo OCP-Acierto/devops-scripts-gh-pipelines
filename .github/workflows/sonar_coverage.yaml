@@ -24,6 +24,10 @@ on:
         default: ''
         required: true
         type: string
+      test_enabled:
+        default: ''
+        required: true
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
@@ -37,6 +41,7 @@ env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   COMMAND: ${{ inputs.command }}
+  TEST_ENABLED: ${{ inputs.test_enabled }}
   PROJECT_CODE: ${{ inputs.project_code }}
   SONAR_URL: ${{ secrets.sonar_url }}
   SONAR_TOKEN: ${{ secrets.sonar_token }}
@@ -65,6 +70,7 @@ jobs:
           gcloud auth configure-docker --quiet
 
       - name: Yarn Install
+        if: $TEST_ENABLED == 'true'
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
         run: |
