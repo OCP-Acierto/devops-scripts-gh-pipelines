@@ -80,8 +80,8 @@ jobs:
         if: ${{ env.TEST_ENABLED == 'true' }}
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
+          CODEARTIFACT_AUTH_TOKEN: "${{ env.CODEARTIFACT_AUTH_TOKEN }}"
         run: |
-          CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
           yarn --frozen-lockfile --no-progress
 
       - name: Coverage
