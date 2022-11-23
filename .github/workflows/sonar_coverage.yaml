@@ -20,6 +20,10 @@ on:
         default: ''
         required: false
         type: string
+      command:
+        default: ''
+        required: true
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
@@ -32,6 +36,7 @@ on:
 env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
+  COMMAND: ${{ inputs.command }}
   PROJECT_CODE: ${{ inputs.project_code }}
   SONAR_URL: ${{ secrets.sonar_url }}
   SONAR_TOKEN: ${{ secrets.sonar_token }}
@@ -69,7 +74,7 @@ jobs:
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
         run: |
-          npm run test:coverage
+          ${COMMAND}
 
       - name: Sonar Scanner Execution
         run: |
