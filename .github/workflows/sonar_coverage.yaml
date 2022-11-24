@@ -28,6 +28,10 @@ on:
         default: ''
         required: true
         type: string
+      lint_command:
+        default: ''
+        required: false
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
@@ -43,6 +47,7 @@ env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   COMMAND: ${{ inputs.command }}
+  LINT_COMMAND: ${{ inputs.lint_command }}
   TEST_ENABLED: ${{ inputs.test_enabled }}
   PROJECT_CODE: ${{ inputs.project_code }}
   SONAR_URL: ${{ secrets.sonar_url }}
@@ -86,6 +91,13 @@ jobs:
           CODEARTIFACT_AUTH_TOKEN: "${{ env.CODEARTIFACT_AUTH_TOKEN }}"
         run: |
           yarn --frozen-lockfile --no-progress
+
+      - name: Lint
+        if: ${{ env.LINT_COMMAND != '' }}
+        env:
+          NODE_OPTIONS: "--max_old_space_size=6144"
+        run: |
+          npm run lint:report
 
       - name: Coverage
         env:
