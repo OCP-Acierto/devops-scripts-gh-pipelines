@@ -63,7 +63,7 @@ jobs:
           TOKEN: ${{ secrets.ocp_packages_actions_role }}
         if: ${{ env.TOKEN != '' }}
         with:
-          role-to-assume: ${{ secrets.ocp_packages_actions_role }}
+          role-to-assume: ${{ secrets.OCP_PACKAGES_ACTIONS_ROLE }}
           role-session-name: githubactions
           aws-region: eu-west-1
 
