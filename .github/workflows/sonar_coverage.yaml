@@ -51,6 +51,9 @@ jobs:
   job:
     timeout-minutes: 30
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
     env:
       GH_NPM_REGISTRY_PAT: "${{ secrets.gh_npm_registry_pat }}"
     steps:
