@@ -98,7 +98,7 @@ jobs:
           touch env_file
           touch env_file_k8s
 
-          FILTER="Key=name,Values=${DEPLOY_ENV}/${PROJECT_CODE}"
+          FILTER="Key=name,Values=${DEPLOY_ENV}/${PROJECT_CODE}/"
           for secret in $(aws secretsmanager list-secrets --filters ${FILTER} --output json | jq .SecretList[].Name -r); do
 
             echo "[INFO] Get Secret vaule for ${env_name[2]^^}"
