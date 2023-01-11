@@ -49,7 +49,7 @@ env:
 jobs:
   job:
     timeout-minutes: 30
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout config-management repo
         uses: actions/checkout@v3
@@ -66,15 +66,16 @@ jobs:
           sudo mv -v kubectl /usr/local/bin/kubectl
           kubectl version --output json | jq '.clientVersion.gitVersion'
 
-      - name: Configure GCP Credentials
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.gcp_adm_k8s_sa_credentials }}
+      - name: Configure GKE Credentials
+        run: |
+          echo "[INFO] Get access to Gcloud ${GCP_PROJECT}"
+          touch gcp_adm_k8s_sa_credentials
+          echo "${{ secrets.gcp_adm_k8s_sa_credentials }}" > gcp_adm_k8s_sa_credentials.json
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: "${{ env.GCP_PROJECT }}"
+          gcloud auth activate-service-account kubernetes-administration@preproduction-cdm.iam.gserviceaccount.com \
+            --key-file=gcp_adm_k8s_sa_credentials.json \
+            --project=${GCP_PROJECT}
+          echo "[INFO] Use project $(gcloud config list --format=json | jq .core.project -r)"
 
       - name: Configure GKE Credentials
         run: |
@@ -90,8 +91,6 @@ jobs:
 
       - name: Update Secrets
         run: |
-          kubectl version --output json | jq '.clientVersion.gitVersion'
-
           touch env_file
           for secret in $(aws secretsmanager list-secrets --output json | jq .SecretList[].Name -r | grep "${SECRET_SUFFIX,,}/${SECRET_FILTER,,}"); do
             value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
