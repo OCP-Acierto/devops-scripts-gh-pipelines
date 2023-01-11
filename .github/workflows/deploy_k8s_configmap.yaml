@@ -30,6 +30,8 @@ on:
     secrets:
       gcp_adm_k8s_sa_credentials:
         required: true
+      gcp_adm_k8s_sa_credentials_encode:
+        required: true
       gh_pull_repo_pat:
         required: true
       aws_access_key_id:
