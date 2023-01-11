@@ -67,12 +67,12 @@ jobs:
           kubectl version --output json | jq '.clientVersion.gitVersion'
 
       - name: Configure GCP Credentials
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.gcp_adm_k8s_sa_credentials }}
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: "${{ env.GCP_PROJECT }}"
 
