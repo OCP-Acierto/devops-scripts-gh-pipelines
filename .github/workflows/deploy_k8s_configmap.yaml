@@ -70,7 +70,8 @@ jobs:
         run: |
           echo "[INFO] Get access to Gcloud ${GCP_PROJECT}"
           touch gcp_adm_k8s_sa_credentials.json
-          echo "${{ secrets.gcp_adm_k8s_sa_credentials }}" > gcp_adm_k8s_sa_credentials.json
+
+          echo "${{ secrets.gcp_adm_k8s_sa_credentials_encode }}" | base64 -d > gcp_adm_k8s_sa_credentials.json
 
           cat gcp_adm_k8s_sa_credentials.json
 
