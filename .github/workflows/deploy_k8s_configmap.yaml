@@ -49,7 +49,7 @@ env:
 jobs:
   job:
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout config-management repo
         uses: actions/checkout@v3
@@ -90,6 +90,8 @@ jobs:
 
       - name: Update Secrets
         run: |
+          kubectl version --output json | jq '.clientVersion.gitVersion'
+
           touch env_file
           for secret in $(aws secretsmanager list-secrets --output json | jq .SecretList[].Name -r | grep "${SECRET_SUFFIX,,}/${SECRET_FILTER,,}"); do
             value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
