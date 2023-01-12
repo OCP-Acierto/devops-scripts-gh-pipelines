@@ -30,8 +30,6 @@ on:
     secrets:
       gcp_adm_k8s_sa_credentials:
         required: true
-      gcp_adm_k8s_sa_credentials_encode:
-        required: true
       gh_pull_repo_pat:
         required: true
       aws_access_key_id:
@@ -68,10 +66,10 @@ jobs:
           sudo mv -v kubectl /usr/local/bin/kubectl
           kubectl version --output json | jq '.clientVersion.gitVersion'
 
-      - name: Configure GKE Credentials
+      - name: Configure GCP Credentials
         run: |
           touch gcp_adm_k8s_sa_credentials.json
-          echo "${{ secrets.gcp_adm_k8s_sa_credentials_encode }}" | base64 -d > gcp_adm_k8s_sa_credentials.json
+          echo "${{ secrets.gcp_adm_k8s_sa_credentials }}" | base64 -d > gcp_adm_k8s_sa_credentials.json
 
           client_email=$(cat gcp_adm_k8s_sa_credentials.json | jq .client_email  -r)
           project_id=$(cat gcp_adm_k8s_sa_credentials.json | jq .project_id  -r)
