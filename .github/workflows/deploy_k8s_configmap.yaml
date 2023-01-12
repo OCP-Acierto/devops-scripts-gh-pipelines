@@ -70,16 +70,18 @@ jobs:
 
       - name: Configure GKE Credentials
         run: |
-          echo "[INFO] Get access to Gcloud ${GCP_PROJECT}"
           touch gcp_adm_k8s_sa_credentials.json
-
           echo "${{ secrets.gcp_adm_k8s_sa_credentials_encode }}" | base64 -d > gcp_adm_k8s_sa_credentials.json
 
-          cat gcp_adm_k8s_sa_credentials.json
+          client_email=$(cat gcp_adm_k8s_sa_credentials.json | jq .client_email  -r)
+          project_id=$(cat gcp_adm_k8s_sa_credentials.json | jq .project_id  -r)
 
-          gcloud auth activate-service-account kubernetes-administration@preproduction-cdm.iam.gserviceaccount.com \
+          echo "[INFO] Get access to Gcloud ${project_id}"
+
+          gcloud auth activate-service-account "${client_email}" \
             --key-file=gcp_adm_k8s_sa_credentials.json \
-            --project=${GCP_PROJECT}
+            --project="${project_id}"
+
           echo "[INFO] Use project $(gcloud config list --format=json | jq .core.project -r)"
 
       - name: Configure GKE Credentials
