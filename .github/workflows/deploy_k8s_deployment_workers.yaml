@@ -59,10 +59,21 @@ jobs:
           kubectl version --output json | jq '.clientVersion.gitVersion'
 
       - name: Configure GCP Credentials
-        uses: google-github-actions/auth@v0
-        with:
-          credentials_json: ${{ secrets.gcp_adm_k8s_sa_credentials }}
-          
+        run: |
+          touch gcp_adm_k8s_sa_credentials.json
+          echo "${{ secrets.gcp_adm_k8s_sa_credentials }}" | base64 -d > gcp_adm_k8s_sa_credentials.json
+
+          client_email=$(cat gcp_adm_k8s_sa_credentials.json | jq .client_email  -r)
+          project_id=$(cat gcp_adm_k8s_sa_credentials.json | jq .project_id  -r)
+
+          echo "[INFO] Get access to Gcloud ${project_id}"
+
+          gcloud auth activate-service-account "${client_email}" \
+            --key-file=gcp_adm_k8s_sa_credentials.json \
+            --project="${project_id}"
+
+          echo "[INFO] Use project $(gcloud config list --format=json | jq .core.project -r)"
+
       - name: Configure GKE Credentials
         run: |
           gcloud container clusters get-credentials "${GKE_CLUSTER_NAME}" \
