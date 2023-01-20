@@ -20,6 +20,14 @@ on:
         default: ''
         required: false
         type: string
+      sonar_exclusions:
+        default: ''
+        required: false
+        type: string
+      sonar_coverage_exclusions:
+        default: ''
+        required: false
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
@@ -33,6 +41,8 @@ env:
   PROJECT_CODE: ${{ inputs.project_code }}
   SONAR_URL: ${{ secrets.sonar_url }}
   SONAR_TOKEN: ${{ secrets.sonar_token }}
+  SONAR_EXCLUSIONS: ${{ inputs.sonar_exclusions }}
+  SONAR_COVERAGE_EXCLUSIONS: ${{ inputs.sonar_coverage_exclusions }}
 jobs:
   job:
     timeout-minutes: 30
@@ -68,9 +78,9 @@ jobs:
                       -Dsonar.host.url=${SONAR_URL} \
                       -Dsonar.login=${SONAR_TOKEN} \
                       -Dsonar.sourceEncoding=UTF-8 \
-                      -Dsonar.exclusions=**/*spec.ts,**/index.ts \
-                      -Dsonar.coverage.exclusions=**/*spec.ts,**/index.ts \
-                      -Dsonar.javascript.lcov.reportPaths=.coverage/lcov.info,.coverage/clover.xml \
+                      -Dsonar.coverage.exclusions=**/*spec.ts,**/**/*spec.ts,**/index.ts,**/*mock.ts,**/__mocks__/*,${SONAR_COVERAGE_EXCLUSIONS} \
+                      -Dsonar.exclusions=public/**,${SONAR_EXCLUSIONS} \
+                      -Dsonar.javascript.lcov.reportPaths=.coverage/lcov.info,.coverage/clover.xml
                   "
                   
 
