@@ -83,7 +83,7 @@ jobs:
           echo "[INFO] Use project $(gcloud config list --format=json | jq .core.project -r)"
 
           echo "[INFO] Install required plugin"
-          gcloud components install gke-gcloud-auth-plugin
+          sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin
 
           echo "[INFO] Set env variable"
           export USE_GKE_GCLOUD_AUTH_PLUGIN=True
