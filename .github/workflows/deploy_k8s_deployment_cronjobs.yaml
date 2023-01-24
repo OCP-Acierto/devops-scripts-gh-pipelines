@@ -37,7 +37,7 @@ env:
   GCP_PROJECT: ${{ inputs.gcp_project }}
   GKE_CLUSTER_NAME: ${{ inputs.gke_cluster_name }}
   CRONJOBS_ARRAY: ${{ inputs.cronjobs_array }}
-  KUBECTL_VERSION: v1.23.6
+  KUBECTL_VERSION: v1.26.0
 jobs:
   job:
     timeout-minutes: 30
