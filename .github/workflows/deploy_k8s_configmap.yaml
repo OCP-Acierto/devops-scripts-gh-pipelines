@@ -45,7 +45,7 @@ env:
   SECRET_FILTER: ${{ inputs.secret_filter }}
   SECRET_SUFFIX: ${{ inputs.secret_suffix }}
   CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
-  KUBECTL_VERSION: v1.23.6
+  KUBECTL_VERSION: v1.26.0
 jobs:
   job:
     timeout-minutes: 30
@@ -123,3 +123,4 @@ jobs:
                 -o yaml --dry-run=client \
             | kubectl apply -f -
           done
+ 1.26.
