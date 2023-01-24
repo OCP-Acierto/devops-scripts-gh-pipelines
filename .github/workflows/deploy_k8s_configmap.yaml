@@ -123,4 +123,4 @@ jobs:
                 -o yaml --dry-run=client \
             | kubectl apply -f -
           done
- 1.26.
+          
