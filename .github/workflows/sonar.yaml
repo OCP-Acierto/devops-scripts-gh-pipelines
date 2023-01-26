@@ -187,7 +187,7 @@ jobs:
               -v "$(pwd)/config-management:/config-management" \
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key-public.pem:/app/storage/certificates/leabank-key-public.pem" } \
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
-              "${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}" \
+              "${GCP_REGISTRY_PHPUNIT}/${GCP_REPOSITORY_PHPUNIT}:${IMAGE_TAG}" \
               /bin/bash -e -c "echo [INFO] Install PHP testing tools && \
               apt-get update && apt-get -qq install -y php7.3-xdebug && \
               echo [INFO] Copy config /config-management/${PHPUNIT_CONFIG_PATH} && \
