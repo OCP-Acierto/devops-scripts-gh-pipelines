@@ -80,7 +80,7 @@ jobs:
                       -Dsonar.sourceEncoding=UTF-8 \
                       -Dsonar.coverage.exclusions=**/*spec.ts,**/**/*spec.ts,**/index.ts,**/*mock.ts,**/__mocks__/*,${SONAR_COVERAGE_EXCLUSIONS} \
                       -Dsonar.exclusions=public/**,${SONAR_EXCLUSIONS} \
-                      -Dsonar.clover.reportPath=/opt/clover/clover.xml
+                      -Dsonar.clover.reportPaths=/opt/clover/clover.xml
                   "
                   
 
