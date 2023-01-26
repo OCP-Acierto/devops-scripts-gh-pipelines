@@ -204,6 +204,7 @@ jobs:
           docker run --rm --workdir "/app" \
               -v "$(pwd)/:/app/" \
               -v "$(pwd)/jreport:/opt/jreport" \
+              -v "$(pwd)/clover:/opt/clover" \
               -v "$(pwd)/coverage:/opt/coverage" \
               "${GCP_REGISTRY}/${GCP_REPOSITORY}:latest" \
               /bin/bash -e -c "ls && /usr/bin/sonar-scanner \
