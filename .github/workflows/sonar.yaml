@@ -28,10 +28,6 @@ on:
         default: ''
         required: false
         type: string
-      php:
-        default: ''
-        required: false
-        type: string
       image_tag:
         default: 'latest'
         required: true
@@ -96,7 +92,6 @@ env:
   SONAR_TOKEN: ${{ secrets.sonar_token }}
   SONAR_EXCLUSIONS: ${{ inputs.sonar_exclusions }}
   SONAR_COVERAGE_EXCLUSIONS: ${{ inputs.sonar_coverage_exclusions }}
-  PHP: ${{ inputs.php }}
   PHPUNIT_REDIS: ${{ inputs.phpunit_redis }}
   PHPUNIT_MONGODB: ${{ inputs.phpunit_mongodb }}
   PHPUNIT_RABBITMQ: ${{ inputs.phpunit_rabbitmq }}
@@ -136,7 +131,6 @@ jobs:
           gcloud auth configure-docker --quiet
 
       - name: PHPUnit Execution
-        if: ${{ env.PHP == 'true' }}
         run: |
           echo "[INFO] Create phpunit-test network"
           docker network create --driver bridge phpunit-test
