@@ -32,12 +32,61 @@ on:
         default: ''
         required: false
         type: string
+      image_tag:
+        default: 'latest'
+        required: true
+        type: string
+      gcp_registry_phpunit:
+        default: ''
+        required: true
+        type: string
+      gcp_repository_phpunit:
+        required: true
+        type: string
+      phpunit_redis:
+        default: ''
+        required: false
+        type: string
+      phpunit_mongodb:
+        default: ''
+        required: false
+        type: string
+      phpunit_rabbitmq:
+        default: ''
+        required: false
+        type: string
+      phpunit_mysql:
+        default: ''
+        required: false
+        type: string
+      phpunit_elasticsearch:
+        default: ''
+        required: false
+        type: string
+      phpunit_config_path:
+        default: ''
+        required: false
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
       sonar_token:
         required: true
       sonar_url:
+        required: true
+      rabbitmq_user:
+        required: false
+      rabbitmq_pass:
+        required: false
+      mysql_user:
+        required: false
+      mysql_pass:
+        required: false
+      leabank_public_key:
+        required: false
+      leabank_private_key:
+        required: false
+      gh_pull_repo_pat:
         required: true
 env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
@@ -48,6 +97,15 @@ env:
   SONAR_EXCLUSIONS: ${{ inputs.sonar_exclusions }}
   SONAR_COVERAGE_EXCLUSIONS: ${{ inputs.sonar_coverage_exclusions }}
   PHP: ${{ inputs.php }}
+  PHPUNIT_REDIS: ${{ inputs.phpunit_redis }}
+  PHPUNIT_MONGODB: ${{ inputs.phpunit_mongodb }}
+  PHPUNIT_RABBITMQ: ${{ inputs.phpunit_rabbitmq }}
+  PHPUNIT_MYSQL: ${{ inputs.phpunit_mysql }}
+  PHPUNIT_ELASTICSEARCH: ${{ inputs.phpunit_elasticsearch }}
+  PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
+  GCP_REGISTRY_PHPUNIT: ${{ inputs.gcp_registry_phpunit }}
+  GCP_REPOSITORY_PHPUNIT: ${{ inputs.gcp_repository_phpunit }}
+  IMAGE_TAG: ${{ inputs.image_tag }}
 jobs:
   job:
     timeout-minutes: 30
@@ -55,6 +113,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Checkout config-management repo
+        uses: actions/checkout@v3
+        with:
+          repository: OCP-Acierto/shared-config-management
+          token: ${{ secrets.gh_pull_repo_pat }}
+          path: config-management
 
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v0
