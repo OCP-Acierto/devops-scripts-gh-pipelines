@@ -28,12 +28,65 @@ on:
         default: ''
         required: false
         type: string
+      php:
+        default: ''
+        required: false
+        type: string
+      image_tag:
+        default: 'latest'
+        required: true
+        type: string
+      gcp_registry_phpunit:
+        default: ''
+        required: true
+        type: string
+      gcp_repository_phpunit:
+        required: true
+        type: string
+      phpunit_redis:
+        default: ''
+        required: false
+        type: string
+      phpunit_mongodb:
+        default: ''
+        required: false
+        type: string
+      phpunit_rabbitmq:
+        default: ''
+        required: false
+        type: string
+      phpunit_mysql:
+        default: ''
+        required: false
+        type: string
+      phpunit_elasticsearch:
+        default: ''
+        required: false
+        type: string
+      phpunit_config_path:
+        default: ''
+        required: false
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
       sonar_token:
         required: true
       sonar_url:
+        required: true
+      rabbitmq_user:
+        required: false
+      rabbitmq_pass:
+        required: false
+      mysql_user:
+        required: false
+      mysql_pass:
+        required: false
+      leabank_public_key:
+        required: false
+      leabank_private_key:
+        required: false
+      gh_pull_repo_pat:
         required: true
 env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
@@ -43,6 +96,16 @@ env:
   SONAR_TOKEN: ${{ secrets.sonar_token }}
   SONAR_EXCLUSIONS: ${{ inputs.sonar_exclusions }}
   SONAR_COVERAGE_EXCLUSIONS: ${{ inputs.sonar_coverage_exclusions }}
+  PHP: ${{ inputs.php }}
+  PHPUNIT_REDIS: ${{ inputs.phpunit_redis }}
+  PHPUNIT_MONGODB: ${{ inputs.phpunit_mongodb }}
+  PHPUNIT_RABBITMQ: ${{ inputs.phpunit_rabbitmq }}
+  PHPUNIT_MYSQL: ${{ inputs.phpunit_mysql }}
+  PHPUNIT_ELASTICSEARCH: ${{ inputs.phpunit_elasticsearch }}
+  PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
+  GCP_REGISTRY_PHPUNIT: ${{ inputs.gcp_registry_phpunit }}
+  GCP_REPOSITORY_PHPUNIT: ${{ inputs.gcp_repository_phpunit }}
+  IMAGE_TAG: ${{ inputs.image_tag }}
 jobs:
   job:
     timeout-minutes: 30
@@ -50,6 +113,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Checkout config-management repo
+        uses: actions/checkout@v3
+        with:
+          repository: OCP-Acierto/shared-config-management
+          token: ${{ secrets.gh_pull_repo_pat }}
+          path: config-management
 
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v0
@@ -64,6 +134,76 @@ jobs:
       - name: Configure Docker Credentials
         run: |
           gcloud auth configure-docker --quiet
+
+      - name: PHPUnit Execution
+        if: ${{ env.PHP == 'true' }}
+        run: |
+          echo "[INFO] Create phpunit-test network"
+          docker network create --driver bridge phpunit-test
+
+          if [ ! -z "${PHPUNIT_MONGODB}" ]; then
+            echo "[INFO] Start mongodb container"
+            docker run -tid --rm --name mongodb --network phpunit-test \
+              -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
+              -e MONGO_INITDB_ROOT_PASSWORD=secret  \
+              ${PHPUNIT_MONGODB}
+          fi
+
+          if [ ! -z "${PHPUNIT_REDIS}" ]; then
+            echo "[INFO] Start redis container"
+            docker run -tid --rm --name redis --network phpunit-test \
+            ${PHPUNIT_REDIS}
+          fi
+
+          if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
+            echo "[INFO] Start rabbitmq container"
+            docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.rabbitmq_user }} -e RABBITMQ_DEFAULT_PASS=${{ secrets.rabbitmq_pass }} \
+            ${PHPUNIT_RABBITMQ}
+          fi
+
+          if [ ! -z "${PHPUNIT_MYSQL}" ]; then
+            echo "[INFO] Start mysql container"
+            docker run -tid --rm --name mysql --network phpunit-test -e MYSQL_ROOT_PASSWORD=${{ secrets.mysql_pass }} \
+            ${PHPUNIT_MYSQL}
+          fi
+
+          if [ ! -z "${PHPUNIT_ELASTICSEARCH}" ]; then
+            echo "[INFO] Start elasticsearch container"
+            docker run -tid --rm --name elasticsearch --network phpunit-test -e "discovery.type=single-node" \
+            ${PHPUNIT_ELASTICSEARCH}
+          fi
+
+          LEABANK_MOUNT_FILE=""
+          LEABANK_PUBLIC_KEY='${{ secrets.leabank_public_key }}'
+          LEABANK_PRIVATE_KEY='${{ secrets.leabank_private_key }}'
+
+          if [ ! -z "${LEABANK_PUBLIC_KEY}" ]; then
+            echo "${LEABANK_PRIVATE_KEY}" > leabank-key.pem
+            echo "${LEABANK_PUBLIC_KEY}" > leabank-key-public.pem
+            LEABANK_MOUNT_FILE="true"
+            echo "[INFO] created leabank public & private pem files from secrets"
+          else
+            echo "[INFO] Skipping leabank pem files"
+          fi
+
+          echo "[INFO] Execute phpunit tests"
+          docker run -t --rm --workdir /app --network phpunit-test \
+              -v "$(pwd)/jreport:/opt/jreport" \
+              -v "$(pwd)/clover:/opt/clover" \
+              -v "$(pwd)/config-management:/config-management" \
+              ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key-public.pem:/app/storage/certificates/leabank-key-public.pem" } \
+              ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
+              "${GCP_REGISTRY}/${GCP_REPOSITORY}:${IMAGE_TAG}" \
+              /bin/bash -e -c "echo [INFO] Install PHP testing tools && \
+              apt-get update && apt-get -qq install -y php7.3-xdebug && \
+              echo [INFO] Copy config /config-management/${PHPUNIT_CONFIG_PATH} && \
+              cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing && \
+              XDEBUG_MODE=coverage /app/vendor/bin/phpunit \
+                      --configuration /app/phpunit.xml \
+                      --log-junit /opt/jreport/jreport.xml \
+                      --coverage-clover /opt/clover/clover.xml \
+                      --coverage-text
+                  "
 
       - name: Sonar Scanner Execution
         run: |
