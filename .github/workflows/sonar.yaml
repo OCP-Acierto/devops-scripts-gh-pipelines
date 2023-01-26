@@ -81,5 +81,6 @@ jobs:
                       -Dsonar.coverage.exclusions=**/*spec.ts,**/**/*spec.ts,**/index.ts,**/*mock.ts,**/__mocks__/*,${SONAR_COVERAGE_EXCLUSIONS} \
                       -Dsonar.exclusions=public/**,${SONAR_EXCLUSIONS} \
                       -Dsonar.clover.reportPath=/opt/clover/clover.xml \
-                      -Dsonar.php.coverage.reportPaths=/opt/clover/clover.xml
+                      -Dsonar.php.coverage.reportPaths=/opt/clover/clover.xml \
+                      -Dsonar.coverage.jacoco.xmlReportPaths=/opt/clover/clover.xml
                   "
