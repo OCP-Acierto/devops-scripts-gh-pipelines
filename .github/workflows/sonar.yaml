@@ -66,6 +66,7 @@ on:
       runphp:
         default: true
         required: false
+        type: boolean
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
