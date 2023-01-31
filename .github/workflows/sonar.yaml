@@ -106,6 +106,7 @@ env:
   GCP_REGISTRY_PHPUNIT: ${{ inputs.gcp_registry_phpunit }}
   GCP_REPOSITORY_PHPUNIT: ${{ inputs.gcp_repository_phpunit }}
   IMAGE_TAG: ${{ inputs.image_tag }}
+  RUNPHP: ${{ inputs.runphp }}
 jobs:
   job:
     timeout-minutes: 30
@@ -136,7 +137,7 @@ jobs:
           gcloud auth configure-docker --quiet
 
       - name: PHPUnit Execution
-        if: ${{ runphp == 'true' }}
+        if: ${{ env.RUNPHP == 'true' }}
         run: |
           echo "[INFO] Create phpunit-test network"
           docker network create --driver bridge phpunit-test
