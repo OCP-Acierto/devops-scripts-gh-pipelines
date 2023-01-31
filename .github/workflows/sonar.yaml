@@ -37,6 +37,7 @@ on:
         required: false
         type: string
       gcp_repository_phpunit:
+        default: ''
         required: false
         type: string
       phpunit_redis:
@@ -64,9 +65,9 @@ on:
         required: false
         type: string
       runphp:
-        default: true
+        default: 'true'
         required: false
-        type: boolean
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
@@ -87,7 +88,7 @@ on:
       leabank_private_key:
         required: false
       gh_pull_repo_pat:
-        required: true
+        required: false
 env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
@@ -135,7 +136,7 @@ jobs:
           gcloud auth configure-docker --quiet
 
       - name: PHPUnit Execution
-        if: ${{ runphp == true }}
+        if: ${{ runphp == 'true' }}
         run: |
           echo "[INFO] Create phpunit-test network"
           docker network create --driver bridge phpunit-test

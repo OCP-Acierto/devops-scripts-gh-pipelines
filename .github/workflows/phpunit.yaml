@@ -4,14 +4,14 @@ on:
     inputs:
       image_tag:
         default: 'latest'
-        required: true
+        required: false
         type: string
       gcp_registry:
         default: 'eu.gcr.io/internal-cdm/builds'
-        required: true
+        required: false
         type: string
       gcp_repository:
-        required: true
+        required: false
         type: string
       phpunit_redis:
         default: ''
