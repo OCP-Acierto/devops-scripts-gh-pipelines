@@ -37,6 +37,9 @@ on:
         default: ''
         required: false
         type: string
+      runphp:
+        default: true
+        required: false
     secrets:
       gh_pull_repo_pat:
         required: true
@@ -91,6 +94,7 @@ jobs:
           gcloud auth configure-docker --quiet
 
       - name: PHPUnit Execution
+        if: ${{ runphp == true }}
         run: |
           echo "[INFO] Create phpunit-test network"
           docker network create --driver bridge phpunit-test
