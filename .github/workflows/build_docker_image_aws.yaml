@@ -45,6 +45,10 @@ on:
         default: ''
         required: false
         type: string
+      have_submodules:
+        default: false
+        required: false
+        type: string
     secrets:
       aws_access_key_id_lab:
         required: false
@@ -82,6 +86,7 @@ env:
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
   UNIT_TESTS: ${{ inputs.unit_tests }}
+  HAVE_SUBMODULES: ${{ inputs.have_submodules }}
 jobs:
   job:
     timeout-minutes: 30
@@ -91,11 +96,16 @@ jobs:
       contents: write
     steps:
       - name: Checkout
+        if: ${{ env.HAVE_SUBMODULES == 'true' }}
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GH_PULL_REPO_PAT }}
           submodules: recursive
           fetch-depth: 0
+
+      - name: Checkout
+        if: ${{ env.HAVE_SUBMODULES == 'false' }}
+        uses: actions/checkout@v3
 
       - name: Execute UnitTests
         env:
