@@ -64,6 +64,8 @@ on:
         required: true
       gh_npm_registry_pat:
         required: false
+      gh_pull_repo_pat:
+        required: false
       ocp_packages_actions_role:
         required: false
       chromatic_project_token_ocp_component_essence_acierto:
