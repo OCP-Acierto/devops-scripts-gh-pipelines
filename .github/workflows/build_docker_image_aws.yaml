@@ -66,6 +66,8 @@ on:
         required: false
       ocp_packages_actions_role:
         required: false
+      chromatic_project_token_ocp_component_essence_acierto:
+        required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
@@ -153,6 +155,7 @@ jobs:
 
           CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
           GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}"
+          CHROMATIC_PROJECT_TOKEN_OCP_COMPONENT_ESSENCE_ACIERTO="${{ secrets.chromatic_project_token_ocp_component_essence_acierto }}"
           echo "[INFO] Build docker images with conditional parameters"
           docker build \
             ${DOCKER_BUILD_ARGS:+ ${DOCKER_BUILD_ARGS} } \
