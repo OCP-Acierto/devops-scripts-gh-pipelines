@@ -129,6 +129,10 @@ jobs:
             kubectl apply -f <( sed "s/__INGRESS_APIKEY__/${{ secrets.ingress_apikey }}/" ${K8S_PATH}/ingress.yaml)
           fi
 
+          if [ -f "${K8S_PATH}/iservice-account.yaml" ]; then
+            kubectl apply -f ${K8S_PATH}/service-account.yaml
+          fi
+
           STATUS=$(kubectl apply -f \
           <( sed "s/__VERSION__/${IMAGE_TAG}/;s/__EPOCH__/$(date +%s)/" ${K8S_PATH}/deployment.yaml))
           echo "[INFO] ${STATUS}"
