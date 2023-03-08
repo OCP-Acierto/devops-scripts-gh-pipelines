@@ -120,7 +120,7 @@ jobs:
       - name: Deploy to k8s
         run: |
           K8S_PATH="./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}"
-          TIMEOUT=180s
+          TIMEOUT=360s
 
           kubectl apply -f "${K8S_PATH}/service.yaml"
           kubectl apply -f "${K8S_PATH}/autoscaling.yaml"
