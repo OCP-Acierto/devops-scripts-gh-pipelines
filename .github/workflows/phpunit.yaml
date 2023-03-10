@@ -39,7 +39,7 @@ on:
         type: string
       runphp:
         default: 'true'
-        required: 'false'
+        required: false
         type: string
     secrets:
       gh_pull_repo_pat:
