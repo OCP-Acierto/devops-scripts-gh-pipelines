@@ -38,8 +38,9 @@ on:
         required: false
         type: string
       runphp:
-        default: true
-        required: false
+        default: 'true'
+        required: 'false'
+        type: string
     secrets:
       gh_pull_repo_pat:
         required: true
@@ -67,6 +68,7 @@ env:
   PHPUNIT_MYSQL: ${{ inputs.phpunit_mysql }}
   PHPUNIT_ELASTICSEARCH: ${{ inputs.phpunit_elasticsearch }}
   PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
+  PHPRUN: ${{ inputs.phprun }}
 jobs:
   job:
     timeout-minutes: 30
@@ -94,7 +96,7 @@ jobs:
           gcloud auth configure-docker --quiet
 
       - name: PHPUnit Execution
-        if: ${{ runphp == true }}
+        if: ${{ env.RUNPHP == 'true' }}
         run: |
           echo "[INFO] Create phpunit-test network"
           docker network create --driver bridge phpunit-test
