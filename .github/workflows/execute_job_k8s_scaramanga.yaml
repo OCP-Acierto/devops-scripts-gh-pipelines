@@ -28,8 +28,6 @@ on:
         required: true
       gh_pull_repo_pat:
         required: true
-      ingress_apikey:
-        required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   PROJECT_CODE: ${{ inputs.project_code }}
@@ -99,7 +97,7 @@ jobs:
           TIMEOUT=360s
           EPOCH=$(date +%s)
 
-          kubectl create job "${PROJECT_CODE}_${EPOCH}" --from="cronjob/${PROJECT_CODE}"
+          kubectl create job "${PROJECT_CODE}-${EPOCH}" --from="cronjob/${PROJECT_CODE}"
 
           echo "[INFO] Getting Deployment Status"
           kubectl get pods | grep -i "${PROJECT_CODE}_${EPOCH}"
