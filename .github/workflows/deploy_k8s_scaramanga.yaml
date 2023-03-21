@@ -142,13 +142,6 @@ jobs:
             kubectl apply -f ${K8S_PATH}/service-account.yaml
           fi
 
-          if [ -f "${K8S_PATH}/deployment.yaml" ]; then
-            echo "[INFO] Applying deployment..."
-            STATUS=$(kubectl apply -f \
-            <( sed "s/__VERSION__/${IMAGE_TAG}/;s/__EPOCH__/$(date +%s)/" ${K8S_PATH}/deployment.yaml))
-            echo "[INFO] ${STATUS}"
-          fi
-
           if [ -f "${K8S_PATH}/cronjob.yaml" ]; then
             echo "[INFO] Applying cronjob..."
             STATUS=$(kubectl apply -f \
@@ -156,20 +149,27 @@ jobs:
             echo "[INFO] ${STATUS}"
           fi
 
-          if [ $(echo ${STATUS} | grep unchanged -c) -eq 1 ]; then
-            echo "[INFO] Restart using rollout Deployment with a timeout of ${TIMEOUT}"
-            kubectl rollout restart deployment ${PROJECT_CODE}
-          else
-            echo "[INFO] Deploying new version ${IMAGE_TAG} with a timeout of ${TIMEOUT}"
+          if [ -f "${K8S_PATH}/deployment.yaml" ]; then
+            echo "[INFO] Applying deployment..."
+            STATUS=$(kubectl apply -f \
+            <( sed "s/__VERSION__/${IMAGE_TAG}/;s/__EPOCH__/$(date +%s)/" ${K8S_PATH}/deployment.yaml))
+            echo "[INFO] ${STATUS}"
+
+            if [ $(echo ${STATUS} | grep unchanged -c) -eq 1 ]; then
+              echo "[INFO] Restart using rollout Deployment with a timeout of ${TIMEOUT}"
+              kubectl rollout restart deployment ${PROJECT_CODE}
+            else
+              echo "[INFO] Deploying new version ${IMAGE_TAG} with a timeout of ${TIMEOUT}"
+            fi
+
+            kubectl rollout status deployment ${PROJECT_CODE} --timeout=${TIMEOUT} || true
+
+            echo "[INFO] Getting Deployment Status"
+            kubectl get pods | grep -i ${PROJECT_CODE}
+
+            echo "[INFO] Getting Deployment Events"
+            kubectl get events | grep -i ${PROJECT_CODE} | tail -n10 || true
+
+            echo "[INFO] Getting Pods Logs"
+            kubectl logs -lapp=${PROJECT_CODE}
           fi
-
-          kubectl rollout status deployment ${PROJECT_CODE} --timeout=${TIMEOUT} || true
-
-          echo "[INFO] Getting Deployment Status"
-          kubectl get pods | grep -i ${PROJECT_CODE}
-
-          echo "[INFO] Getting Deployment Events"
-          kubectl get events | grep -i ${PROJECT_CODE} | tail -n10 || true
-
-          echo "[INFO] Getting Pods Logs"
-          kubectl logs -lapp=${PROJECT_CODE}
