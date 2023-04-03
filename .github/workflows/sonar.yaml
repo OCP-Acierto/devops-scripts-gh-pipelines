@@ -206,6 +206,10 @@ jobs:
                       --coverage-text
                   "
 
+      - name: Set Java tool options
+        run: |
+          echo "export JAVA_TOOL_OPTIONS=\"-Duser.language=es -Dfile.encoding=UTF-8 -Duser.country=ES\"" >> $GITHUB_ENV
+
       - name: Sonar Scanner Execution
         run: |
           docker run --rm --workdir "/app" \
