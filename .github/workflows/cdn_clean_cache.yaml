@@ -40,7 +40,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         if: ${{ env.ACCOUNT_ID != '' }}
         with:
-          role-to-assume: "arn:aws:iam::${ACCOUNT_ID}:role/gha_oidc_assume_role"
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
           role-session-name: GithubActions
           aws-region: eu-west-1
 
