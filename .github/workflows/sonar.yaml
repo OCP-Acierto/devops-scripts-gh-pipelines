@@ -88,7 +88,7 @@ on:
       leabank_private_key:
         required: false
       gh_pull_repo_pat:
-        required: false
+        required: true
 env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
