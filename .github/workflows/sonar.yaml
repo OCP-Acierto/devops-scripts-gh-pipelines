@@ -30,7 +30,7 @@ on:
         type: string
       image_tag:
         default: 'latest'
-        required: true
+        required: false
         type: string
       gcp_registry_phpunit:
         default: ''
