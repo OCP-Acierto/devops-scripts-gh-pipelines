@@ -49,6 +49,10 @@ on:
         default: false
         required: false
         type: string
+      account_id:
+        default: ''
+        required: false
+        type: string
     secrets:
       aws_access_key_id_lab:
         required: false
@@ -87,6 +91,7 @@ env:
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
   UNIT_TESTS: ${{ inputs.unit_tests }}
   HAVE_SUBMODULES: ${{ inputs.have_submodules }}
+  ACCOUNT_ID: ${{ inputs.account_id }}
 jobs:
   job:
     timeout-minutes: 30
@@ -158,9 +163,18 @@ jobs:
 
       - name: Configure AWS Credentials PROD
         uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ env.ACCOUNT_ID == '' }}
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_prod }}
+          aws-region: eu-west-1
+
+      - name: Configure AWS credentials via role assumption
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR PROD

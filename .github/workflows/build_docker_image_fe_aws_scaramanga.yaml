@@ -41,6 +41,10 @@ on:
         default: '80'
         required: false
         type: string
+      account_id:
+        default: ''
+        required: false
+        type: string
     secrets:
       aws_access_key_id_lab:
         required: true
@@ -71,6 +75,7 @@ env:
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
+  ACCOUNT_ID: ${{ inputs.account_id }}
 jobs:
   job:
     timeout-minutes: 30
@@ -121,6 +126,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_stage }}
           aws-region: eu-west-1
         if: ${{ env.AWS_REGISTRY_STAGE != '' }}
+      
+      - name: Configure AWS credentials via role assumption
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
 
       - name: Login to Amazon ECR STAGE
         uses: aws-actions/amazon-ecr-login@v1
