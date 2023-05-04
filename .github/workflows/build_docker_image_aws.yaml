@@ -49,7 +49,19 @@ on:
         default: false
         required: false
         type: string
-      account_id:
+      account_id_lab:
+        default: ''
+        required: false
+        type: string
+      account_id_non_prod:
+        default: ''
+        required: false
+        type: string
+      account_id_stage:
+        default: ''
+        required: false
+        type: string
+      account_id_prod:
         default: ''
         required: false
         type: string
@@ -91,7 +103,13 @@ env:
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
   UNIT_TESTS: ${{ inputs.unit_tests }}
   HAVE_SUBMODULES: ${{ inputs.have_submodules }}
-  ACCOUNT_ID: ${{ inputs.account_id }}
+  ACCOUNT_ID_LAB: ${{ inputs.account_id_lab }}
+  ACCOUNT_ID_NON_PROD: ${{ inputs.account_id_non_prod }}
+  ACCOUNT_ID_STAGE: ${{ inputs.account_id_stage }}
+  ACCOUNT_ID_PROD: ${{ inputs.account_id_prod }}
+permissions:
+      id-token: write
+      contents: write
 jobs:
   job:
     timeout-minutes: 30
@@ -163,17 +181,17 @@ jobs:
 
       - name: Configure AWS Credentials PROD
         uses: aws-actions/configure-aws-credentials@v1
-        if: ${{ env.ACCOUNT_ID == '' }}
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_prod }}
           aws-region: eu-west-1
+        if: ${{ env.AWS_REGISTRY_PROD != '' }} && ${{ env.ACCOUNT_ID_PROD == '' }}
 
       - name: Configure AWS credentials via role assumption
         uses: aws-actions/configure-aws-credentials@v2
-        if: ${{ env.ACCOUNT_ID != '' }}
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
         with:
-          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_PROD }}:role/gha_oidc_assume_role"
           role-session-name: GithubActions
           aws-region: eu-west-1
 
@@ -210,10 +228,18 @@ jobs:
 
       - name: Configure AWS Credentials NON-PROD
         uses: aws-actions/configure-aws-credentials@v1
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
+          aws-region: eu-west-1
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }} && ${{ env.ACCOUNT_ID_NON_PROD == '' }}
+
+      - name: Configure AWS credentials via role assumption
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_NON_PROD }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR NON-PROD
@@ -228,11 +254,19 @@ jobs:
 
 
       - name: Configure AWS Credentials STAGE
-        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_stage }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_stage }}
+          aws-region: eu-west-1
+        if: ${{ env.AWS_REGISTRY_STAGE != '' }} && ${{ env.ACCOUNT_ID_STAGE == '' }}
+
+      - name: Configure AWS credentials via role assumption
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID_STAGE != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_STAGE }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR STAGE
@@ -247,11 +281,19 @@ jobs:
 
 
       - name: Configure AWS Credentials LAB
-        if: ${{ env.AWS_REGISTRY_LAB != '' }}
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_lab }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_lab }}
+          aws-region: eu-west-1
+        if: ${{ env.AWS_REGISTRY_LAB != '' }} && ${{ env.ACCOUNT_ID_LAB == '' }}
+
+      - name: Configure AWS credentials via role assumption
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_LAB }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR LAB
