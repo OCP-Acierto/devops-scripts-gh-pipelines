@@ -23,6 +23,9 @@ env:
   CLOUDFRONT_ID: ${{ inputs.cloudfront_id }}
   CLOUDFRONT_INVALIDATION: ${{ inputs.cloudfront_invalidation }}
   ACCOUNT_ID: ${{ inputs.account_id }}
+permissions:
+      id-token: write
+      contents: write
 jobs:
   job:
     timeout-minutes: 30
