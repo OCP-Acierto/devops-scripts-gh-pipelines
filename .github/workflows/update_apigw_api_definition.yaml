@@ -11,6 +11,10 @@ on:
       terraform_path:
         required: true
         type: string
+      account_id:
+        default: ''
+        required: false
+        type: string
     secrets:
       aws_access_key_id:
         required: true
@@ -22,6 +26,10 @@ env:
   PROJECT_CODE: ${{ inputs.project_code }}
   AWS_PROFILE: ${{ inputs.aws_profile }}
   TERRAFORM_PATH: ${{ inputs.terraform_path }}
+  ACCOUNT_ID: ${{ inputs.account_id }}
+permissions:
+      id-token: write
+      contents: write
 jobs:
   job:
     timeout-minutes: 30
@@ -32,9 +40,18 @@ jobs:
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
+        if: ${{ env.ACCOUNT_ID == '' }}
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: eu-west-1
+
+      - name: Configure AWS credentials via role assumption
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
           aws-region: eu-west-1
 
       - name: Update APIGW with terraform
