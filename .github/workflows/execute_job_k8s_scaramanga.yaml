@@ -121,6 +121,3 @@ jobs:
 
           echo "[INFO] Getting Deployment Events"
           kubectl get events | grep -i "${JOB_NAME}" | tail -n10 || true
-
-          echo "[INFO] Getting Pods Logs"
-          kubectl logs -lapp="${JOB_NAME}"
