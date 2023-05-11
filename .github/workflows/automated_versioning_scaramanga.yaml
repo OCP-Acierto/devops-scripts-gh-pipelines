@@ -1,0 +1,85 @@
+name: Automated version
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  job:
+    if: github.event.pull_request.merged == true
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.gh_pull_repo_pat }}
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.gh_pull_repo_pat }}
+          fetch-depth: '0'
+
+      - name: Automated version
+        run: |
+          BUMP_VERSION=0
+          NPM_VERSION=0
+
+          echo "[INFO] Working on branch"
+          git status
+
+          echo "[INFO] Getting last commits from branch ${GITHUB_HEAD_REF}"
+
+          PULL_NUMBER=${{ github.event.pull_request.number }}
+
+          echo "[INFO] Getting last commits from PR with number ${PULL_NUMBER}"
+          GIT_COMMENTS=$(gh pr view ${PULL_NUMBER} --json commits | jq '.commits[] | "\(.messageHeadline) \(.messageBody)"' -r)
+
+          echo "[INFO] Trying to parse Git comments from branch:"
+          echo "${GIT_COMMENTS}"
+
+          CHECK_MAJOR_GREP='feat!:|fix!:|docs!:|style!:|refactor!:|perf!:|test!:|chore!:|revert!:|build!:|BREAKING CHANGE:'
+          CHECK_MINOR_GREP='feat:'
+          CHECK_PATCH_GREP='fix:'
+          if [ "$(echo "${GIT_COMMENTS}" | grep -iE "${CHECK_MAJOR_GREP}"  -c)" -ge 1 ]; then
+            echo "[INFO] Updating MAJOR in package.json"
+            BUMP_TYPE="major"
+            BUMP_VERSION=1
+          elif [ "$(echo "${GIT_COMMENTS}" | grep -iE "${CHECK_MINOR_GREP}" -c)" -ge 1 ]; then
+            echo "[INFO] Updating MINOR in package.json"
+            BUMP_TYPE="minor"
+            BUMP_VERSION=1
+          elif [ "$(echo "${GIT_COMMENTS}" | grep -iE "${CHECK_PATCH_GREP}" -c)" -ge 1 ]; then
+            echo "[INFO] Updating PATCH in package.json"
+            BUMP_TYPE="patch"
+            BUMP_VERSION=1
+          fi
+
+          if [ ${BUMP_VERSION} -eq 1 ]; then
+            git config user.name "github-actions"
+            git config user.email "sys@acierto.com"
+
+            echo "[INFO] Bump version with a ${BUMP_TYPE}"
+            npm version ${BUMP_TYPE} --no-git-tag-version
+
+            git pull
+            git add .
+            git commit -m "Update package.json version - By Github Actions"
+            git push origin master
+
+            NPM_VERSION=$(cat package.json | jq -r .version )
+            echo "NPM_VERSION=${NPM_VERSION}" >> $GITHUB_ENV
+          else
+            echo "[INFO] NO Bump version this time"
+          fi
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ env.NPM_VERSION != '0' }}
+        with:
+          tag_name: ${{ env.NPM_VERSION }}
+          name: Release ${{ env.NPM_VERSION }}
+          draft: true
+          prerelease: false
+          generate_release_notes: true
