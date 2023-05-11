@@ -1,9 +1,14 @@
 name: Automated version
 on:
-  pull_request:
-    types:
-      - closed
-
+  workflow_call:
+    inputs:
+      image_tag:
+        default: 'latest'
+        required: true
+        type: string
+    secrets:
+      gh_pull_repo_pat:
+        required: true
 jobs:
   job:
     if: github.event.pull_request.merged == true
