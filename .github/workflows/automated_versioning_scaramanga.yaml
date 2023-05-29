@@ -44,9 +44,12 @@ jobs:
           echo "[INFO] Trying to parse Git comments from branch:"
           echo "${GIT_COMMENTS}"
 
-          CHECK_MAJOR_GREP='feat!:|fix!:|docs!:|style!:|refactor!:|perf!:|test!:|chore!:|revert!:|build!:|BREAKING CHANGE:'
-          CHECK_MINOR_GREP='feat:'
-          CHECK_PATCH_GREP='fix:'
+          CHECK_MAJOR_GREP_CHANGE='feat!:|fix!:|docs!:|style!:|refactor!:|perf!:|test!:|chore!:|revert!:|build!:|BREAKING CHANGE:|'
+          CHECK_MAJOR_GREP_NORMAL='feat\(.*\)\!:|fix\(.*\)\!:|docs\(.*\)\!:|style\(.*\)\!:|refactor\(.*\)\!:|perf\(.*\)\!:|test\(.*\)\!:|chore\(.*\)\!:|revert\(.*\)\!:|build\(.*\)\!:'
+          CHECK_MAJOR_GREP="${CHECK_MAJOR_GREP_CHANGE}${CHECK_MAJOR_GREP_NORMAL}"
+          CHECK_MINOR_GREP='feat\(.*\)\:|feat:'
+          CHECK_PATCH_GREP='fix\(.*\)\:|fix:'
+          
           if [ "$(echo "${GIT_COMMENTS}" | grep -iE "${CHECK_MAJOR_GREP}"  -c)" -ge 1 ]; then
             echo "[INFO] Updating MAJOR in package.json"
             BUMP_TYPE="major"
