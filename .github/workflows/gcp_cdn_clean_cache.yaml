@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure GCP Credentials
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v1.1.1
         with:
           credentials_json: ${{ secrets.gcp_cdn_cache_invalidate }}
 

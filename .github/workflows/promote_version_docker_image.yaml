@@ -46,14 +46,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials STAGE
-        uses: aws-actions/configure-aws-credentials@v1
+        uses:  aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_stage }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_stage }}
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR STAGE
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v3
 
       - name: Check that Docker image is pushed to ECR Registry
         run: |
@@ -78,14 +78,14 @@ jobs:
 
 
       - name: Configure AWS Credentials NON-PROD
-        uses: aws-actions/configure-aws-credentials@v1
+        uses:  aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR NON-PROD
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v3
 
       - name: Promoting Docker image with Version NON-PROD
         run: |
@@ -101,14 +101,14 @@ jobs:
 
 
       - name: Configure AWS Credentials PROD
-        uses: aws-actions/configure-aws-credentials@v1
+        uses:  aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_prod }}
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR PROD
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v3
 
       - name: Promoting Docker image with Version PROD
         run: |
