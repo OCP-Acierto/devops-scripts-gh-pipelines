@@ -22,9 +22,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure GCP Credentials
-        uses: google-github-actions/auth@v1.1.1
-        with:
-          credentials_json: ${{ secrets.gcp_cdn_cache_invalidate }}
+        run: |
+          # IMPORTANT: SECRET MUST BE IN BASE64
+          touch gcp_cdn_cache_invalidate.json
+          echo "${{ secrets.gcp_cdn_cache_invalidate }}" | base64 -d > gcp_cdn_cache_invalidate.json
+
+          client_email=$(cat gcp_adm_k8s_sa_credentials.json | jq .client_email  -r)
+
+          client_email=$(cat gcp_cdn_cache_invalidate.json | jq .client_email  -r)
+          project_id=$(cat gcp_cdn_cache_invalidate.json | jq .project_id  -r)
+
+          echo "[INFO] Get access to Gcloud ${project_id}"
+
+          gcloud auth activate-service-account "${client_email}" \
+            --key-file=gcp_cdn_cache_invalidate.json \
+            --project="${project_id}"
+
+          echo "[INFO] Use project $(gcloud config list --format=json | jq .core.project -r)"
+
+
 
       - name: Clean cache GCP CDN
         run: |

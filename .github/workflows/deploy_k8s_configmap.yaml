@@ -76,6 +76,7 @@ jobs:
 
       - name: Configure GCP Credentials
         run: |
+          # IMPORTANT: SECRET MUST BE IN BASE64
           touch gcp_adm_k8s_sa_credentials.json
           echo "${{ secrets.gcp_adm_k8s_sa_credentials }}" | base64 -d > gcp_adm_k8s_sa_credentials.json
 
