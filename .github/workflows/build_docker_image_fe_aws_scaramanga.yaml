@@ -122,7 +122,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR LAB
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
         if: ${{ env.AWS_REGISTRY_LAB != '' }}
 
       - name: Build & tag image to AWS ECR LAB
@@ -162,7 +162,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR STAGE
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
         if: ${{ env.AWS_REGISTRY_STAGE != '' }}
 
       - name: Build & tag image to AWS ECR STAGE
@@ -202,7 +202,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR NON-PROD
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
         if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
 
       - name: Build & tag image to AWS ECR NON-PROD
@@ -242,7 +242,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR PROD
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
         if: ${{ env.AWS_REGISTRY_PROD != '' }}
 
       - name: Build & tag image to AWS ECR PROD

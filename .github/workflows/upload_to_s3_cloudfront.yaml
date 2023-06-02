@@ -62,7 +62,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push Static Files to S3 bucket & Invalidate CloudFront Cache
         run: |

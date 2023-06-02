@@ -53,7 +53,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR STAGE
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Check that Docker image is pushed to ECR Registry
         run: |
@@ -85,7 +85,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR NON-PROD
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Promoting Docker image with Version NON-PROD
         run: |
@@ -108,7 +108,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR PROD
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Promoting Docker image with Version PROD
         run: |

@@ -196,7 +196,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR PROD
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build & tag image to AWS ECR
         run: |
@@ -244,7 +244,7 @@ jobs:
 
       - name: Login to Amazon ECR NON-PROD
         if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push image to AWS ECR NON-PROD
         if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
@@ -271,7 +271,7 @@ jobs:
 
       - name: Login to Amazon ECR STAGE
         if: ${{ env.AWS_REGISTRY_STAGE != '' }}
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push image to AWS ECR STAGE
         if: ${{ env.AWS_REGISTRY_STAGE != '' }}
@@ -298,7 +298,7 @@ jobs:
 
       - name: Login to Amazon ECR LAB
         if: ${{ env.AWS_REGISTRY_LAB != '' }}
-        uses: aws-actions/amazon-ecr-login@v3
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push image to AWS ECR LAB
         if: ${{ env.AWS_REGISTRY_LAB != '' }}
