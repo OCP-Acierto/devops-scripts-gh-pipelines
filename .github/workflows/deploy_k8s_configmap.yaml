@@ -104,7 +104,7 @@ jobs:
               --zone "${K8S_CLUSTER_ZONE}" --project "${GCP_PROJECT}"
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses:  aws-actions/configure-aws-credentials@v2
         if: ${{ env.ACCOUNT_ID == '' }}
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id }}

@@ -161,7 +161,7 @@ jobs:
 
 
       - name: Configure AWS credentials OCP-ARTIFACTS
-        uses: aws-actions/configure-aws-credentials@v1
+        uses:  aws-actions/configure-aws-credentials@v2
         env:
           TOKEN: ${{ secrets.ocp_packages_actions_role }}
         if: ${{ env.TOKEN != '' }}
@@ -180,7 +180,7 @@ jobs:
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials PROD
-        uses: aws-actions/configure-aws-credentials@v1
+        uses:  aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_prod }}
@@ -196,7 +196,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR PROD
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v3
 
       - name: Build & tag image to AWS ECR
         run: |
@@ -227,7 +227,7 @@ jobs:
 
 
       - name: Configure AWS Credentials NON-PROD
-        uses: aws-actions/configure-aws-credentials@v1
+        uses:  aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
@@ -244,7 +244,7 @@ jobs:
 
       - name: Login to Amazon ECR NON-PROD
         if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v3
 
       - name: Push image to AWS ECR NON-PROD
         if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
@@ -254,7 +254,7 @@ jobs:
 
 
       - name: Configure AWS Credentials STAGE
-        uses: aws-actions/configure-aws-credentials@v1
+        uses:  aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_stage }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_stage }}
@@ -271,7 +271,7 @@ jobs:
 
       - name: Login to Amazon ECR STAGE
         if: ${{ env.AWS_REGISTRY_STAGE != '' }}
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v3
 
       - name: Push image to AWS ECR STAGE
         if: ${{ env.AWS_REGISTRY_STAGE != '' }}
@@ -281,7 +281,7 @@ jobs:
 
 
       - name: Configure AWS Credentials LAB
-        uses: aws-actions/configure-aws-credentials@v1
+        uses:  aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id_lab }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key_lab }}
@@ -298,7 +298,7 @@ jobs:
 
       - name: Login to Amazon ECR LAB
         if: ${{ env.AWS_REGISTRY_LAB != '' }}
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v3
 
       - name: Push image to AWS ECR LAB
         if: ${{ env.AWS_REGISTRY_LAB != '' }}

@@ -43,12 +43,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure GCP Credentials
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v1.1.1
         with:
           credentials_json: ${{ secrets.gcp_cdm_registry_sa_credentials }}
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/setup-gcloud@v1.1.1
         with:
           project_id: internal-cdm
 
@@ -68,13 +68,13 @@ jobs:
           docker rm "${CONTAINER_ID}"
 
       - name: Configure GCP Credentials only for production-cdm
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v1.1.1
         if: ${{ env.GCP_CDN_PROJECT == 'production-cdm' }}
         with:
           credentials_json: ${{ secrets.gcp_storage_sa_credentials }}
 
       - name: Set up Cloud SDK only for production-cdm
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/setup-gcloud@v1.1.1
         if: ${{ env.GCP_CDN_PROJECT == 'production-cdm' }}
         with:
           project_id: production-cdm
