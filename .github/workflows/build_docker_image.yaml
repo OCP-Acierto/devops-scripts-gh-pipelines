@@ -47,13 +47,6 @@ jobs:
           touch gcp_cdm_registry_sa_credentials.txt
           echo "${{ secrets.gcp_cdm_registry_sa_credentials }}" > gcp_cdm_registry_sa_credentials.txt
 
-          echo "[INFO] ECHO"
-          echo "${{ secrets.gcp_cdm_registry_sa_credentials }}"
-          echo "[INFO] CAT"
-          cat gcp_cdm_registry_sa_credentials.txt
-          echo "[INFO] JQ"
-          cat gcp_cdm_registry_sa_credentials.txt | jq . 
-
           cat gcp_cdm_registry_sa_credentials.txt | base64 -d > gcp_cdm_registry_sa_credentials.json
 
           client_email=$(cat gcp_cdm_registry_sa_credentials.json | jq .client_email  -r)
