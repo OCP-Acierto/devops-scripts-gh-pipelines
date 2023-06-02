@@ -44,8 +44,11 @@ jobs:
 
       - name: Configure GCP Credentials
         run: |
-          touch gcp_cdm_registry_sa_credentials.json
-          echo "${{ secrets.gcp_cdm_registry_sa_credentials }}" | base64 -d > gcp_cdm_registry_sa_credentials.json
+          touch gcp_cdm_registry_sa_credentials.txt
+          echo "${{ secrets.gcp_cdm_registry_sa_credentials }}"
+
+          echo "${{ secrets.gcp_cdm_registry_sa_credentials }}" > gcp_cdm_registry_sa_credentials.txt
+          cat gcp_cdm_registry_sa_credentials.txt | base64 -d > gcp_cdm_registry_sa_credentials.json
 
           client_email=$(cat gcp_cdm_registry_sa_credentials.json | jq .client_email  -r)
           project_id=$(cat gcp_cdm_registry_sa_credentials.json | jq .project_id  -r)
