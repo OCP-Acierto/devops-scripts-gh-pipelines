@@ -92,7 +92,7 @@ jobs:
           kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/deployment.yaml)
 
           if [${PROJECT_CODE} == 'credimarket' ];then
-            kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/cron-scoring-result-email-api.yaml);
+            kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/cron-scoring-result-email-api.yaml
           fi
 
           echo "[INFO] Start Rollout Deployment with a timeout of ${TIMEOUT}"
