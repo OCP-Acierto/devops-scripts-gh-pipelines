@@ -27,8 +27,6 @@ jobs:
           touch gcp_cdn_cache_invalidate.json
           echo "${{ secrets.gcp_cdn_cache_invalidate }}" | base64 -d > gcp_cdn_cache_invalidate.json
 
-          client_email=$(cat gcp_adm_k8s_sa_credentials.json | jq .client_email  -r)
-
           client_email=$(cat gcp_cdn_cache_invalidate.json | jq .client_email  -r)
           project_id=$(cat gcp_cdn_cache_invalidate.json | jq .project_id  -r)
 

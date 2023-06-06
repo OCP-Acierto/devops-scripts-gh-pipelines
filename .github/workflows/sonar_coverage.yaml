@@ -126,8 +126,6 @@ jobs:
           touch gcp_cdm_registry_sa_credentials.json
           echo "${{ secrets.gcp_cdm_registry_sa_credentials }}" | base64 -d > gcp_cdm_registry_sa_credentials.json
 
-          client_email=$(cat gcp_adm_k8s_sa_credentials.json | jq .client_email  -r)
-
           client_email=$(cat gcp_cdm_registry_sa_credentials.json | jq .client_email  -r)
           project_id=$(cat gcp_cdm_registry_sa_credentials.json | jq .project_id  -r)
 
