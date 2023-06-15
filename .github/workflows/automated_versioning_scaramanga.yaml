@@ -88,6 +88,6 @@ jobs:
         with:
           tag_name: ${{ env.NPM_VERSION }}
           name: Release ${{ env.NPM_VERSION }}
-          draft: true
+          draft: false
           prerelease: false
           generate_release_notes: true
