@@ -45,7 +45,7 @@ jobs:
       - name: Checkout config-management repo
         uses: actions/checkout@v3
         with:
-          repository: OCP-Acierto/shared-config-management
+          repository: OCP-Acierto/ocp-config-management
           token: ${{ secrets.gh_pull_repo_pat }}
           path: config
 
