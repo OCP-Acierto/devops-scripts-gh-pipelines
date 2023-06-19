@@ -21,6 +21,8 @@ on:
         required: true
       aws_secret_access_key_prod:
         required: true
+      gh_pull_repo_pat:
+        required: true
 env:
   PROJECT_CODE: ${{ inputs.project_code }}
   DEPLOY_ENV: ${{ inputs.deploy_env }}
