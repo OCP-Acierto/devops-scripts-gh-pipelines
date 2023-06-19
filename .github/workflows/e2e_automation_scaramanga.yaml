@@ -2,6 +2,12 @@ name: e2e Automation
 on:
   workflow_call:
     inputs:
+      project_code:
+        required: true
+        type: string
+      deploy_env:
+        required: true
+        type: string
       docker_file:
         default: 'Dockerfile'
         required: true
@@ -16,6 +22,8 @@ on:
       aws_secret_access_key_prod:
         required: true
 env:
+  PROJECT_CODE: ${{ inputs.project_code }}
+  DEPLOY_ENV: ${{ inputs.deploy_env }}
   DOCKER_FILE: ${{ inputs.docker_file }}
   RUN_COMMAND: ${{ inputs.run_command }}
 permissions:
@@ -32,6 +40,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Checkout config-management repo
+        uses: actions/checkout@v3
+        with:
+          repository: OCP-Acierto/shared-config-management
+          token: ${{ secrets.gh_pull_repo_pat }}
+          path: config
+
       - name: Configure AWS Credentials PROD
         uses:  aws-actions/configure-aws-credentials@v2
         with:
@@ -42,9 +57,11 @@ jobs:
       - name: Login to Amazon ECR PROD
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build & tag image to AWS ECR
+      - name: Execute e2e automation
         run: |
-          echo "[INFO] Build docker images with conditional parameters"
-          docker build \
-            ${RUN_COMMAND:+     --build-arg RUN_COMMAND=${RUN_COMMAND} } \
-            --file ${DOCKER_FILE} .
+          # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md
+          
+          export $(grep -v '^#' ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env | xargs)
+
+          npm ci
+          npm run ${RUN_COMMAND}
