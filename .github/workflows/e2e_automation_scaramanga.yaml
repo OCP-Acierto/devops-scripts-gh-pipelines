@@ -2,13 +2,6 @@ name: e2e Automation
 on:
   workflow_call:
     inputs:
-      aws_registry_prod:
-        default: ''
-        required: true
-        type: string
-      aws_repository:
-        required: true
-        type: string
       docker_file:
         default: 'Dockerfile'
         required: true
@@ -23,8 +16,6 @@ on:
       aws_secret_access_key_prod:
         required: true
 env:
-  AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
-  AWS_REPOSITORY: ${{ inputs.aws_repository }}
   DOCKER_FILE: ${{ inputs.docker_file }}
   RUN_COMMAND: ${{ inputs.run_command }}
 permissions:
