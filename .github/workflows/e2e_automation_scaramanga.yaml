@@ -1,0 +1,59 @@
+name: e2e Automation
+on:
+  workflow_call:
+    inputs:
+      aws_registry_prod:
+        default: ''
+        required: true
+        type: string
+      aws_repository:
+        required: true
+        type: string
+      docker_file:
+        default: 'Dockerfile'
+        required: true
+        type: string
+      run_command:
+        default: ''
+        required: true
+        type: string
+    secrets:
+      aws_access_key_id_prod:
+        required: true
+      aws_secret_access_key_prod:
+        required: true
+env:
+  AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
+  AWS_REPOSITORY: ${{ inputs.aws_repository }}
+  DOCKER_FILE: ${{ inputs.docker_file }}
+  RUN_COMMAND: ${{ inputs.run_command }}
+permissions:
+      id-token: write
+      contents: write
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials PROD
+        uses:  aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id_prod }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key_prod }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR PROD
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build & tag image to AWS ECR
+        run: |
+          echo "[INFO] Build docker images with conditional parameters"
+          docker build \
+            ${RUN_COMMAND:+     --build-arg RUN_COMMAND=${RUN_COMMAND} } \
+            --file ${DOCKER_FILE} .
