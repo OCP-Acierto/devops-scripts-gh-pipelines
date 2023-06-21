@@ -59,6 +59,9 @@ jobs:
 
           echo "[INFO] Use project $(gcloud config list --format=json | jq .core.project -r)"
 
+          echo "[INFO] Remove json file to avoid to build with it"
+          rm -Rf gcp_cdm_registry_sa_credentials.json
+
       - name: Configure Docker Credentials
         run: |
           gcloud auth configure-docker --quiet
