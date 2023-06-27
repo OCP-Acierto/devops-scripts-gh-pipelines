@@ -38,7 +38,7 @@ jobs:
 
           echo "[INFO] Use project $(gcloud config list --format=json | jq .core.project -r)"
 
-
+          rm -Rf gcp_cdn_cache_invalidate.json
 
       - name: Clean cache GCP CDN
         run: |
