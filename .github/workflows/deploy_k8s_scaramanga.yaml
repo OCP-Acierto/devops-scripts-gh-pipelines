@@ -25,6 +25,10 @@ on:
         default: ''
         required: false
         type: string
+      configmap_array:
+        default: ''
+        required: false
+        type: string
     secrets:
       aws_access_key_id:
         required: true
@@ -43,6 +47,7 @@ env:
   EKS_CLUSTER_ZONE: ${{ inputs.eks_cluster_zone }}
   KUBECTL_VERSION: v1.23.6
   ACCOUNT_ID: ${{ inputs.account_id }}
+  CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
 permissions:
       id-token: write
       contents: write
@@ -133,7 +138,23 @@ jobs:
               --from-literal=env="$(cat env_file_k8s)" \
               -o yaml --dry-run=client \
           | kubectl apply -f -
+        
+      - name: Update Configmaps with array (PHP)
+        run: |
+          COUNTER="$(echo ${CONFIGMAP_ARRAY} | jq -r '. | length')"
 
+          for ((i=0;i<COUNTER;i++)); do
+            CONFIG_CODE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_code")
+            CONFIG_FILE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_file")
+            CONFIG_PATH=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_path")
+
+            kubectl create configmap "${PROJECT_CODE}-${CONFIG_CODE}" \
+                --from-literal=${CONFIG_FILE}="$(cat ./config/${DEPLOY_ENV}/${PROJECT_CODE}/${CONFIG_PATH})" \
+                -o yaml --dry-run=client \
+            | kubectl apply -f -
+          done
+        if: ${{ env.CONFIGMAP_ARRAY != '' }}
+        
       - name: Deploy to k8s
         run: |
           K8S_PATH="./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}"
