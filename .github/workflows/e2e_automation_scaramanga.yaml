@@ -12,10 +12,6 @@ on:
         default: ''
         required: true
         type: string
-      os_type:
-        default: ''
-        required: true
-        type: string
     secrets:
       gh_pull_repo_pat:
         required: true
@@ -23,7 +19,6 @@ env:
   PROJECT_CODE: ${{ inputs.project_code }}
   DEPLOY_ENV: ${{ inputs.deploy_env }}
   RUN_COMMAND: ${{ inputs.run_command }}
-  OS_TYPE: ${{ inputs.os_type }}
 permissions:
       id-token: write
       contents: write
@@ -53,7 +48,6 @@ jobs:
             Project:    ${PROJECT_CODE}
             Deploy Env: ${DEPLOY_ENV}
             Command:    ${RUN_COMMAND}
-            OS type:    ${OS_TYPE}
             "
 
           npm ci
