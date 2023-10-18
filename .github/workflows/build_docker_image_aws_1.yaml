@@ -1,0 +1,256 @@
+name: Build Docker Image
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        default: 'latest'
+        required: true
+        type: string
+      aws_registry_lab:
+        default: ''
+        required: false
+        type: string
+      aws_registry_stage:
+        default: ''
+        required: false
+        type: string
+      aws_registry_non_prod:
+        default: ''
+        required: false
+        type: string
+      aws_registry_prod:
+        default: ''
+        required: false
+        type: string
+      aws_repository:
+        required: true
+        type: string
+      docker_file:
+        default: 'Dockerfile'
+        required: true
+        type: string
+      docker_build_args:
+        default: ''
+        required: false
+        type: string
+      max_num_failed_tests:
+        default: '1'
+        required: false
+        type: string
+      min_percentage_coverage:
+        default: '80'
+        required: false
+        type: string
+      unit_tests:
+        default: ''
+        required: false
+        type: string
+      have_submodules:
+        default: false
+        required: false
+        type: string
+      account_id_lab:
+        default: ''
+        required: false
+        type: string
+      account_id_non_prod:
+        default: ''
+        required: false
+        type: string
+      account_id_stage:
+        default: ''
+        required: false
+        type: string
+      account_id_prod:
+        default: ''
+        required: false
+        type: string
+    secrets:
+      gh_npm_registry_pat:
+        required: false
+      gh_pull_repo_pat:
+        required: false
+      ocp_packages_actions_role:
+        required: false
+      chromatic_project_token_ocp_component_essence_acierto:
+        required: false
+env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
+  AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry_non_prod }}
+  AWS_REGISTRY_STAGE: ${{ inputs.aws_registry_stage }}
+  AWS_REGISTRY_LAB: ${{ inputs.aws_registry_lab }}
+  AWS_REPOSITORY: ${{ inputs.aws_repository }}
+  DOCKER_FILE: ${{ inputs.docker_file }}
+  DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
+  MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
+  MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
+  UNIT_TESTS: ${{ inputs.unit_tests }}
+  HAVE_SUBMODULES: ${{ inputs.have_submodules }}
+  ACCOUNT_ID_LAB: ${{ inputs.account_id_lab }}
+  ACCOUNT_ID_NON_PROD: ${{ inputs.account_id_non_prod }}
+  ACCOUNT_ID_STAGE: ${{ inputs.account_id_stage }}
+  ACCOUNT_ID_PROD: ${{ inputs.account_id_prod }}
+permissions:
+      id-token: write
+      contents: write
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Checkout
+        if: ${{ env.HAVE_SUBMODULES == 'true' }}
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_PULL_REPO_PAT }}
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Checkout
+        if: ${{ env.HAVE_SUBMODULES == 'false' }}
+        uses: actions/checkout@v3
+
+      - name: Execute UnitTests
+        env:
+          GH_NPM_REGISTRY_PAT: "${{ secrets.gh_npm_registry_pat }}"
+        if: ${{ env.UNIT_TESTS == 'true' }}
+        run: |
+          npm ci
+          npm run test
+          npm run test:cov | tee coverage.txt
+
+          coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
+
+          num_failed_tests=$(cat test.json | jq .numFailedTests)
+
+          if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
+            echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS} 
+                  allow tests to fail, exit with errlvl 1"
+            exit 1
+          else
+            echo "[INFO] Tests Passed successfully with ${num_failed_tests} failed, continue"
+          fi
+
+          if  (( $(echo "$coverage > $MIN_PERCENTAGE_COVERAGE" | bc -l) )); then
+            echo "[INFO] Coverage passed successfully with ${coverage}%, continue"
+          else
+            echo "[ERROR] Coverage ${coverage} is less than the minimum of ${MIN_PERCENTAGE_COVERAGE},
+                  exit with errlvl 1"
+            exit 1
+          fi
+
+
+      - name: Configure AWS credentials OCP-ARTIFACTS
+        uses:  aws-actions/configure-aws-credentials@v2
+        env:
+          TOKEN: ${{ secrets.ocp_packages_actions_role }}
+        if: ${{ env.TOKEN != '' }}
+        with:
+          role-to-assume: ${{ secrets.ocp_packages_actions_role }}
+          role-session-name: githubactions
+          aws-region: eu-west-1
+
+      - name: Authenticate to CodeArtifact
+        env:
+          TOKEN: ${{ secrets.ocp_packages_actions_role }}
+        if: ${{ env.TOKEN != '' }}
+        run: |
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bauer-ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text)
+          echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
+          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials via role assumption Lab
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_LAB }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR LAB
+        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push image to AWS ECR LAB
+        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        run: |
+          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest
+
+      - name: Configure AWS credentials via role assumption stage
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID_STAGE != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_STAGE }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR STAGE
+        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push image to AWS ECR STAGE
+        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
+        run: |
+          docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest
+
+      - name: Configure AWS credentials via role assumption Non-prod
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_NON_PROD }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR NON-PROD
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push image to AWS ECR NON-PROD
+        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
+        run: |
+          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
+
+      - name: Configure AWS credentials via role assumption PROD
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_PROD }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR PROD
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build & tag image to AWS ECR
+        run: |
+
+          CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
+          GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}"
+          CHROMATIC_PROJECT_TOKEN_OCP_COMPONENT_ESSENCE_ACIERTO="${{ secrets.chromatic_project_token_ocp_component_essence_acierto }}"
+          echo "[INFO] Build docker images with conditional parameters"
+          docker build \
+            ${DOCKER_BUILD_ARGS:+ ${DOCKER_BUILD_ARGS} } \
+            ${GH_NPM_REGISTRY_PAT:+     --build-arg "GH_NPM_REGISTRY_PAT=${GH_NPM_REGISTRY_PAT}" } \
+            ${CODEARTIFACT_AUTH_TOKEN:+ --build-arg "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}" } \
+            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest" } \
+            --file ${DOCKER_FILE} .
+
+      - name: Push image to AWS ECR PROD
+        if: ${{ env.AWS_REGISTRY_PROD != '' }}
+        run: |
+          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
