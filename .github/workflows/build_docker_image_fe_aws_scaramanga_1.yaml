@@ -6,22 +6,6 @@ on:
         default: 'latest'
         required: true
         type: string
-      aws_registry_lab:
-        default: ''
-        required: true
-        type: string
-      aws_registry_stage:
-        default: ''
-        required: true
-        type: string
-      aws_registry_non_prod:
-        default: ''
-        required: false
-        type: string
-      aws_registry_prod:
-        default: ''
-        required: false
-        type: string
       aws_repository:
         required: true
         type: string
@@ -40,6 +24,10 @@ on:
       min_percentage_coverage:
         default: '80'
         required: false
+        type: string
+      aws_region:
+        default: ''
+        required: true
         type: string
       account_id_lab:
         default: ''
@@ -62,19 +50,20 @@ on:
         required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
-  AWS_REGISTRY_LAB: ${{ inputs.aws_registry_lab }}
-  AWS_REGISTRY_STAGE: ${{ inputs.aws_registry_stage }}
-  AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry_non_prod }}
-  AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
   AWS_REPOSITORY: ${{ inputs.aws_repository }}
   DOCKER_FILE: ${{ inputs.docker_file }}
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
+  AWS_REGION: ${{ inputs.aws_region }}
   ACCOUNT_ID_LAB: ${{ inputs.account_id_lab }}
   ACCOUNT_ID_NON_PROD: ${{ inputs.account_id_non_prod }}
   ACCOUNT_ID_STAGE: ${{ inputs.account_id_stage }}
   ACCOUNT_ID_PROD: ${{ inputs.account_id_prod }}
+  AWS_REGISTRY_LAB: ${{ inputs.account_id_lab }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com
+  AWS_REGISTRY_STAGE: ${{ inputs.account_id_stage }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com
+  AWS_REGISTRY_NON_PROD: ${{ inputs.account_id_non_prod }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com
+  AWS_REGISTRY_PROD: ${{ inputs.account_id_prod }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com
 permissions:
       id-token: write
       contents: write
