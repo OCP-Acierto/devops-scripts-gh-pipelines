@@ -1,4 +1,4 @@
-name: Build Docker Image 911138552131.dkr.ecr.eu-west-1.amazonaws.com
+name: Build Docker Image
 on:
   workflow_call:
     inputs:
