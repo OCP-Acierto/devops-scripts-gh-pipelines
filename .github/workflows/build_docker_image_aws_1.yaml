@@ -158,7 +158,6 @@ jobs:
           if [ -n "$ACCOUNT_ID_NON_PROD" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_NON_PROD.dkr.ecr.$AWS_REGION.amazonaws.com; fi
           if [ -n "$ACCOUNT_ID_PROD" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_PRoD.dkr.ecr.$AWS_REGION.amazonaws.com; fi
 
-
           echo "[INFO] Build docker images with conditional parameters"
           docker build \
             ${DOCKER_BUILD_ARGS:+ ${DOCKER_BUILD_ARGS} } \
@@ -244,4 +243,4 @@ jobs:
         run: |
           docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
-
+          
