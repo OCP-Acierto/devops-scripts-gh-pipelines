@@ -88,7 +88,7 @@ jobs:
 
       - name: Login to Amazon ECR LAB
         uses: aws-actions/amazon-ecr-login@v1
-        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
 
       - name: Build & tag image to AWS ECR LAB
         run: |
@@ -100,14 +100,14 @@ jobs:
             --tag ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
-        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
 
       - name: Push image to AWS ECR LAB
         run: |
           echo "[INFO] Pushing to LAB ${AWS_REGISTRY_LAB}"
           docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest
-        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
 
       - name: Configure AWS credentials via role assumption STAGE
         uses: aws-actions/configure-aws-credentials@v2
@@ -119,7 +119,7 @@ jobs:
 
       - name: Login to Amazon ECR STAGE
         uses: aws-actions/amazon-ecr-login@v1
-        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
+        if: ${{ env.ACCOUNT_ID_STAGE != '' }}
 
       - name: Build & tag image to AWS ECR STAGE
         run: |
@@ -131,14 +131,14 @@ jobs:
             --tag ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
-        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
+        if: ${{ env.ACCOUNT_ID_STAGE != '' }}
 
       - name: Push image to AWS ECR STAGE
         run: |
           echo "[INFO] Pushing to STAGE ${AWS_REGISTRY_STAGE}"
           docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest
-        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
+        if: ${{ env.ACCOUNT_ID_STAGE != '' }}
 
 
       - name: Configure AWS credentials via role assumption Non-prod
@@ -151,7 +151,7 @@ jobs:
 
       - name: Login to Amazon ECR NON-PROD
         uses: aws-actions/amazon-ecr-login@v1
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
 
       - name: Build & tag image to AWS ECR NON-PROD
         run: |
@@ -163,14 +163,14 @@ jobs:
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
 
       - name: Push image to AWS ECR NON-PROD
         run: |
           echo "[INFO] Pushing to NON-PROD ${AWS_REGISTRY_NON_PROD}"
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
 
       - name: Configure AWS credentials via role assumption Prod
         uses: aws-actions/configure-aws-credentials@v2
@@ -182,7 +182,7 @@ jobs:
 
       - name: Login to Amazon ECR PROD
         uses: aws-actions/amazon-ecr-login@v1
-        if: ${{ env.AWS_REGISTRY_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
 
       - name: Build & tag image to AWS ECR PROD
         run: |
@@ -194,10 +194,10 @@ jobs:
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
             --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
-        if: ${{ env.AWS_REGISTRY_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
 
       - name: Push image to AWS ECR PROD
         run: |
             docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
             docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
-        if: ${{ env.AWS_REGISTRY_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}

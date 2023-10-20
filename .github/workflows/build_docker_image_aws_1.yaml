@@ -160,11 +160,11 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR LAB
-        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push image to AWS ECR LAB
-        if: ${{ env.AWS_REGISTRY_LAB != '' }}
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
         run: |
           docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest
@@ -178,11 +178,11 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR STAGE
-        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
+        if: ${{ env.ACCOUNT_ID_STAGE != '' }}
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push image to AWS ECR STAGE
-        if: ${{ env.AWS_REGISTRY_STAGE != '' }}
+        if: ${{ env.ACCOUNT_ID_STAGE != '' }}
         run: |
           docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest
@@ -196,11 +196,11 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to Amazon ECR NON-PROD
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push image to AWS ECR NON-PROD
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
         run: |
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
@@ -238,7 +238,7 @@ jobs:
             --file ${DOCKER_FILE} .
 
       - name: Push image to AWS ECR PROD
-        if: ${{ env.AWS_REGISTRY_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
         run: |
           docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
