@@ -75,10 +75,6 @@ env:
   ACCOUNT_ID_NON_PROD: ${{ inputs.account_id_non_prod }}
   ACCOUNT_ID_STAGE: ${{ inputs.account_id_stage }}
   ACCOUNT_ID_PROD: ${{ inputs.account_id_prod }}
-  AWS_REGISTRY_PROD: ${{ inputs.account_id_prod }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com
-  AWS_REGISTRY_NON_PROD: ${{ inputs.account_id_non_prod }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com
-  AWS_REGISTRY_STAGE: ${{ inputs.account_id_stage }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com
-  AWS_REGISTRY_LAB: ${{ inputs.account_id_lab }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com
 permissions:
       id-token: write
       contents: write
@@ -131,7 +127,6 @@ jobs:
             exit 1
           fi
 
-
       - name: Configure AWS credentials OCP-ARTIFACTS
         uses:  aws-actions/configure-aws-credentials@v2
         env:
@@ -153,10 +148,17 @@ jobs:
 
       - name: Build & tag image to AWS ECR
         run: |
-
           CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
           GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}"
           CHROMATIC_PROJECT_TOKEN_OCP_COMPONENT_ESSENCE_ACIERTO="${{ secrets.chromatic_project_token_ocp_component_essence_acierto }}"
+          
+          echo "[INFO] Create registry variables"
+          if [ -n "$ACCOUNT_ID_LAB" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_LAB.dkr.ecr.$AWS_REGION.amazonaws.com; fi
+          if [ -n "$ACCOUNT_ID_STAGE" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_STAGE.dkr.ecr.$AWS_REGION.amazonaws.com; fi
+          if [ -n "$ACCOUNT_ID_NON_PROD" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_NON_PROD.dkr.ecr.$AWS_REGION.amazonaws.com; fi
+          if [ -n "$ACCOUNT_ID_PROD" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_PRoD.dkr.ecr.$AWS_REGION.amazonaws.com; fi
+
+
           echo "[INFO] Build docker images with conditional parameters"
           docker build \
             ${DOCKER_BUILD_ARGS:+ ${DOCKER_BUILD_ARGS} } \
@@ -187,8 +189,8 @@ jobs:
       - name: Push image to AWS ECR LAB
         if: ${{ env.ACCOUNT_ID_LAB != '' }}
         run: |
-          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest
+          docker push ${ACCOUNT_ID_LAB}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${ACCOUNT_ID_LAB}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
 
       - name: Configure AWS credentials via role assumption stage
         uses: aws-actions/configure-aws-credentials@v2
@@ -205,8 +207,8 @@ jobs:
       - name: Push image to AWS ECR STAGE
         if: ${{ env.ACCOUNT_ID_STAGE != '' }}
         run: |
-          docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest
+          docker push ${ACCOUNT_ID_STAGE}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${ACCOUNT_ID_STAGE}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
 
       - name: Configure AWS credentials via role assumption Non-prod
         uses: aws-actions/configure-aws-credentials@v2
@@ -223,8 +225,8 @@ jobs:
       - name: Push image to AWS ECR NON-PROD
         if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
         run: |
-          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
+          docker push ${ACCOUNT_ID_NON_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${ACCOUNT_ID_NON_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
 
       - name: Configure AWS credentials via role assumption PROD
         uses: aws-actions/configure-aws-credentials@v2
@@ -240,5 +242,6 @@ jobs:
       - name: Push image to AWS ECR PROD
         if: ${{ env.ACCOUNT_ID_PROD != '' }}
         run: |
-          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
+          docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
+
