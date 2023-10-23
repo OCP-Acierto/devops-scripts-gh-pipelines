@@ -146,6 +146,17 @@ jobs:
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
+      - name: Configure AWS credentials via role assumption PROD
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_PROD }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR PROD
+        uses: aws-actions/amazon-ecr-login@v1
+      
       - name: Build & tag image to AWS ECR
         run: |
           CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
@@ -173,6 +184,12 @@ jobs:
             ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest" } \
             --file ${DOCKER_FILE} .
 
+      - name: Push image to AWS ECR PROD
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
+        run: |
+          docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
+    
       - name: Configure AWS credentials via role assumption Lab
         uses: aws-actions/configure-aws-credentials@v2
         if: ${{ env.ACCOUNT_ID_LAB != '' }}
@@ -226,21 +243,5 @@ jobs:
         run: |
           docker push ${ACCOUNT_ID_NON_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${ACCOUNT_ID_NON_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
-
-      - name: Configure AWS credentials via role assumption PROD
-        uses: aws-actions/configure-aws-credentials@v2
-        if: ${{ env.ACCOUNT_ID_PROD != '' }}
-        with:
-          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_PROD }}:role/gha_oidc_assume_role"
-          role-session-name: GithubActions
-          aws-region: eu-west-1
-
-      - name: Login to Amazon ECR PROD
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Push image to AWS ECR PROD
-        if: ${{ env.ACCOUNT_ID_PROD != '' }}
-        run: |
-          docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
+          
           
