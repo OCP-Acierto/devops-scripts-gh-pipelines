@@ -146,33 +146,6 @@ jobs:
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
-      - name: Build & tag image to AWS ECR
-        run: |
-          CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
-          GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}"
-          CHROMATIC_PROJECT_TOKEN_OCP_COMPONENT_ESSENCE_ACIERTO="${{ secrets.chromatic_project_token_ocp_component_essence_acierto }}"
-          
-          echo "[INFO] Create registry variables"
-          if [ -n "$ACCOUNT_ID_LAB" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_LAB.dkr.ecr.$AWS_REGION.amazonaws.com; fi
-          if [ -n "$ACCOUNT_ID_STAGE" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_STAGE.dkr.ecr.$AWS_REGION.amazonaws.com; fi
-          if [ -n "$ACCOUNT_ID_NON_PROD" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_NON_PROD.dkr.ecr.$AWS_REGION.amazonaws.com; fi
-          if [ -n "$ACCOUNT_ID_PROD" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_PRoD.dkr.ecr.$AWS_REGION.amazonaws.com; fi
-
-          echo "[INFO] Build docker images with conditional parameters"
-          docker build \
-            ${DOCKER_BUILD_ARGS:+ ${DOCKER_BUILD_ARGS} } \
-            ${GH_NPM_REGISTRY_PAT:+     --build-arg "GH_NPM_REGISTRY_PAT=${GH_NPM_REGISTRY_PAT}" } \
-            ${CODEARTIFACT_AUTH_TOKEN:+ --build-arg "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}" } \
-            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
-            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest" } \
-            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
-            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest" } \
-            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
-            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest" } \
-            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
-            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest" } \
-            --file ${DOCKER_FILE} .
-
       - name: Configure AWS credentials via role assumption Lab
         uses: aws-actions/configure-aws-credentials@v2
         if: ${{ env.ACCOUNT_ID_LAB != '' }}
@@ -243,4 +216,31 @@ jobs:
         run: |
           docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
+
+      - name: Build & tag image to AWS ECR
+        run: |
+          CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
+          GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}"
+          CHROMATIC_PROJECT_TOKEN_OCP_COMPONENT_ESSENCE_ACIERTO="${{ secrets.chromatic_project_token_ocp_component_essence_acierto }}"
+          
+          echo "[INFO] Create registry variables"
+          if [ -n "$ACCOUNT_ID_LAB" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_LAB.dkr.ecr.$AWS_REGION.amazonaws.com; fi
+          if [ -n "$ACCOUNT_ID_STAGE" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_STAGE.dkr.ecr.$AWS_REGION.amazonaws.com; fi
+          if [ -n "$ACCOUNT_ID_NON_PROD" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_NON_PROD.dkr.ecr.$AWS_REGION.amazonaws.com; fi
+          if [ -n "$ACCOUNT_ID_PROD" ]; then AWS_REGISTRY_LAB=$ACCOUNT_ID_PRoD.dkr.ecr.$AWS_REGION.amazonaws.com; fi
+
+          echo "[INFO] Build docker images with conditional parameters"
+          docker build \
+            ${DOCKER_BUILD_ARGS:+ ${DOCKER_BUILD_ARGS} } \
+            ${GH_NPM_REGISTRY_PAT:+     --build-arg "GH_NPM_REGISTRY_PAT=${GH_NPM_REGISTRY_PAT}" } \
+            ${CODEARTIFACT_AUTH_TOKEN:+ --build-arg "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}" } \
+            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
+            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest" } \
+            --file ${DOCKER_FILE} .
           
