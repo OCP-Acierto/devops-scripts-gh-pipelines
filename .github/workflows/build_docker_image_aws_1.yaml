@@ -77,7 +77,6 @@ env:
   ACCOUNT_ID_STAGE: ${{ inputs.account_id_stage }}
   ACCOUNT_ID_PROD: ${{ inputs.account_id_prod }}
   OCP_PACKAGES_ACTIONS_ROLE: ${{ inputs.ocp_packages_actions_role }}
-  
 permissions:
       id-token: write
       contents: write
@@ -131,10 +130,10 @@ jobs:
           fi
 
       - name: Configure AWS credentials OCP-ARTIFACTS
-        uses:  aws-actions/configure-aws-credentials@v2
+        uses:  aws-actions/configure-aws-credentials@v4
         if: ${{ env.OCP_PACKAGES_ACTIONS_ROLE != '' }}
         with:
-          role-to-assume: ${OCP_PACKAGES_ACTIONS_ROLE}
+          role-to-assume: ${{ env.OCP_PACKAGES_ACTIONS_ROLE }}
           role-session-name: githubactions
           aws-region: eu-west-1
 
@@ -146,7 +145,7 @@ jobs:
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
       - name: Configure AWS credentials via role assumption PROD
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         if: ${{ env.ACCOUNT_ID_PROD != '' }}
         with:
           role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_PROD }}:role/gha_oidc_assume_role"
@@ -190,7 +189,7 @@ jobs:
           docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
     
       - name: Configure AWS credentials via role assumption Lab
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         if: ${{ env.ACCOUNT_ID_LAB != '' }}
         with:
           role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_LAB }}:role/gha_oidc_assume_role"
@@ -208,7 +207,7 @@ jobs:
           docker push ${ACCOUNT_ID_LAB}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
 
       - name: Configure AWS credentials via role assumption stage
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         if: ${{ env.ACCOUNT_ID_STAGE != '' }}
         with:
           role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_STAGE }}:role/gha_oidc_assume_role"
@@ -226,7 +225,7 @@ jobs:
           docker push ${ACCOUNT_ID_STAGE}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
 
       - name: Configure AWS credentials via role assumption Non-prod
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
         with:
           role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_NON_PROD }}:role/gha_oidc_assume_role"
