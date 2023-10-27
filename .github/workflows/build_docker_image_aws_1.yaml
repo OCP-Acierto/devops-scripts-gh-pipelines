@@ -129,20 +129,16 @@ jobs:
 
       - name: Configure AWS credentials OCP-ARTIFACTS
         uses:  aws-actions/configure-aws-credentials@v2
-        env:
-          TOKEN: ${{ secrets.ocp_packages_actions_role }}
-        if: ${{ env.TOKEN != '' }}
+        if: ${{ env.OCP_PACKAGES_ACTIONS_ROLE != '' }}
         with:
-          role-to-assume: ${{ secrets.ocp_packages_actions_role }}
+          role-to-assume: ${OCP_PACKAGES_ACTIONS_ROLE}
           role-session-name: githubactions
           aws-region: eu-west-1
 
       - name: Authenticate to CodeArtifact
-        env:
-          TOKEN: ${{ secrets.ocp_packages_actions_role }}
-        if: ${{ env.TOKEN != '' }}
+        if: ${{ env.OCP_PACKAGES_ACTIONS_ROLE != '' }}
         run: |
-          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bauer-ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text)
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text)
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
