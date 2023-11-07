@@ -1,0 +1,198 @@
+name: Deploy to K8s
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+      project_code:
+        required: true
+        type: string
+      ecr_repository:
+        required: false
+        type: string
+      deploy_env:
+        required: true
+        type: string
+      eks_cluster_name:
+        required: true
+        type: string
+      eks_cluster_zone:
+        default: eu-west-1
+        required: true
+        type: string
+      account_id:
+        default: ''
+        required: false
+        type: string
+      configmap_array:
+        default: ''
+        required: false
+        type: string
+    secrets:
+      gh_pull_repo_pat:
+        required: true
+      ingress_apikey:
+        required: false
+env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  PROJECT_CODE: ${{ inputs.project_code }}
+  ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+  DEPLOY_ENV: ${{ inputs.deploy_env }}
+  EKS_CLUSTER_NAME: ${{ inputs.eks_cluster_name }}
+  EKS_CLUSTER_ZONE: ${{ inputs.eks_cluster_zone }}
+  KUBECTL_VERSION: v1.23.6
+  ACCOUNT_ID: ${{ inputs.account_id }}
+  CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
+permissions:
+      id-token: write
+      contents: write
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kubernetes repo
+        uses: actions/checkout@v3
+        with:
+          repository: OCP-Acierto/devops-scripts-k8s
+          token: ${{ secrets.gh_pull_repo_pat }}
+          path: k8s
+
+      - name: Checkout kubernetes repo
+        uses: actions/checkout@v3
+        with:
+          repository: OCP-Acierto/ocp-config-management
+          token: ${{ secrets.gh_pull_repo_pat }}
+          path: config
+
+      - name: Install Kubectl ${{ env.KUBECTL_VERSION }}
+        run: |
+          sudo rm -fv  /usr/local/bin/kubectl
+          curl -sLO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+          sudo chmod +x kubectl
+          sudo mv -v kubectl /usr/local/bin/kubectl
+          kubectl version --output json | jq '.clientVersion.gitVersion'
+
+      - name: Configure AWS credentials via role assumption
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
+
+      - name: Configure EKS Credentials
+        run: |
+          aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
+          kubectl version --output json | jq '.serverVersion.gitVersion'
+
+      - name: Check that Docker image is pushed to ECR Registry
+        run: |
+          if [ "${ECR_REPOSITORY}" != "" ]; then
+            REPOSITORY_NAME=${ECR_REPOSITORY}
+          else
+            REPOSITORY_NAME=${PROJECT_CODE}
+          fi
+
+          echo "[INFO] Search Image in repository ${REPOSITORY_NAME}"
+          if [ "$(aws ecr list-images --repository-name "${REPOSITORY_NAME}" | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
+            echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment";
+          else
+            echo "[ERROR] Docker Image with tag ${IMAGE_TAG} doesn't exist!, exit deployment";
+            exit 1
+          fi
+
+      - name: Update Configmap
+        run: |
+          touch env_file
+          touch env_file_k8s
+
+          FILTER="Key=name,Values=${DEPLOY_ENV}/${PROJECT_CODE}/"
+          for secret in $(aws secretsmanager list-secrets --filters ${FILTER} --output json | jq .SecretList[].Name -r); do
+
+            echo "[INFO] Get Secret vaule for ${env_name[2]^^}"
+            value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
+
+            IFS='/' read -r -a env_name <<< "$secret"
+            echo "${env_name[2]^^}=${value}" >> env_file
+          done
+
+          export $(cat env_file | xargs)
+          echo "[INFO] Create Configmap with envfile ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env"
+          envsubst < ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env > env_file_k8s
+
+          kubectl create configmap "${PROJECT_CODE}-env" \
+              --from-literal=env="$(cat env_file_k8s)" \
+              -o yaml --dry-run=client \
+          | kubectl apply -f -
+        
+      - name: Update Configmaps with array (PHP)
+        run: |
+          COUNTER="$(echo ${CONFIGMAP_ARRAY} | jq -r '. | length')"
+
+          for ((i=0;i<COUNTER;i++)); do
+            CONFIG_CODE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_code")
+            CONFIG_FILE=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_file")
+            CONFIG_PATH=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_path")
+
+            kubectl create configmap "${PROJECT_CODE}-${CONFIG_CODE}" \
+                --from-literal=${CONFIG_FILE}="$(cat ./config/${DEPLOY_ENV}/${PROJECT_CODE}/${CONFIG_PATH})" \
+                -o yaml --dry-run=client \
+            | kubectl apply -f -
+          done
+        if: ${{ env.CONFIGMAP_ARRAY != '' }}
+        
+      - name: Deploy to k8s
+        run: |
+          K8S_PATH="./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}"
+          TIMEOUT=360s
+
+          if [ -f "${K8S_PATH}/service.yaml" ]; then
+            echo "[INFO] Applying service..."
+            kubectl apply -f "${K8S_PATH}/service.yaml"
+          fi
+
+          if [ -f "${K8S_PATH}/autoscaling.yaml" ]; then
+            echo "[INFO] Applying autoscaling..."
+            kubectl apply -f "${K8S_PATH}/autoscaling.yaml"
+          fi
+
+          if [ -f "${K8S_PATH}/ingress.yaml" ]; then
+            echo "[INFO] Applying ingress..."
+            kubectl apply -f <( sed "s/__INGRESS_APIKEY__/${{ secrets.ingress_apikey }}/" ${K8S_PATH}/ingress.yaml)
+          fi
+
+          if [ -f "${K8S_PATH}/service-account.yaml" ]; then
+            echo "[INFO] Applying service-account..."
+            kubectl apply -f ${K8S_PATH}/service-account.yaml
+          fi
+
+          if [ -f "${K8S_PATH}/cronjob.yaml" ]; then
+            echo "[INFO] Applying cronjob..."
+            STATUS=$(kubectl apply -f \
+            <( sed "s/__VERSION__/${IMAGE_TAG}/;s/__EPOCH__/$(date +%s)/" ${K8S_PATH}/cronjob.yaml))
+            echo "[INFO] ${STATUS}"
+          fi
+
+          if [ -f "${K8S_PATH}/deployment.yaml" ]; then
+            echo "[INFO] Applying deployment..."
+            STATUS=$(kubectl apply -f \
+            <( sed "s/__VERSION__/${IMAGE_TAG}/;s/__EPOCH__/$(date +%s)/" ${K8S_PATH}/deployment.yaml))
+            echo "[INFO] ${STATUS}"
+
+            if [ $(echo ${STATUS} | grep unchanged -c) -eq 1 ]; then
+              echo "[INFO] Restart using rollout Deployment with a timeout of ${TIMEOUT}"
+              kubectl rollout restart deployment ${PROJECT_CODE}
+            else
+              echo "[INFO] Deploying new version ${IMAGE_TAG} with a timeout of ${TIMEOUT}"
+            fi
+
+            kubectl rollout status deployment ${PROJECT_CODE} --timeout=${TIMEOUT} || true
+
+            echo "[INFO] Getting Deployment Status"
+            kubectl get pods | grep -i ${PROJECT_CODE}
+
+            echo "[INFO] Getting Deployment Events"
+            kubectl get events | grep -i ${PROJECT_CODE} | tail -n10 || true
+          fi
