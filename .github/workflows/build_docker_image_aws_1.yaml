@@ -63,8 +63,6 @@ on:
         required: false
       chromatic_project_token_ocp_component_essence_acierto:
         required: false
-      ocp_packages_actions_role:
-        required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
   AWS_REPOSITORY: ${{ inputs.aws_repository }}
