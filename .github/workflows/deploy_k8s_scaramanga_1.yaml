@@ -120,7 +120,7 @@ jobs:
 
           export $(cat env_file | xargs)
           echo "[INFO] Create Configmap with envfile ./config/new-${DEPLOY_ENV}/${PROJECT_CODE}/.env"
-          sudo envsubst < ./config/new-${DEPLOY_ENV}/${PROJECT_CODE}/.env > env_file_k8s
+          envsubst < ./config/new-${DEPLOY_ENV}/${PROJECT_CODE}/.env > env_file_k8s
 
           kubectl create configmap "${PROJECT_CODE}-env" \
               --from-literal=env="$(cat env_file_k8s)" \
