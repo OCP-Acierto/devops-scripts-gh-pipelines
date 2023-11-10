@@ -1,0 +1,58 @@
+name: Upload to S3 CloudFront
+on:
+  workflow_call:
+    inputs:
+      cloudfront_id:
+        default: ''
+        required: true
+        type: string
+      cloudfront_invalidation:
+        default: ''
+        required: true
+        type: string
+      account_id:
+        default: ''
+        required: false
+        type: string
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: false
+env:
+  CLOUDFRONT_ID: ${{ inputs.cloudfront_id }}
+  CLOUDFRONT_INVALIDATION: ${{ inputs.cloudfront_invalidation }}
+  ACCOUNT_ID: ${{ inputs.account_id }}
+permissions:
+      id-token: write
+      contents: write
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses:  aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID == '' }}
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: eu-west-1
+
+      - name: Configure AWS credentials via role assumption
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          echo "[INFO] Invalidating ${CLOUDFRONT_INVALIDATION} resources for ${CLOUDFRONT_ID}"
+          aws cloudfront create-invalidation \
+            --distribution-id ${CLOUDFRONT_ID} \
+            --paths "${CLOUDFRONT_INVALIDATION}"
+          aws cloudfront list-invalidations \
+            --output json \
+            --distribution-id ${CLOUDFRONT_ID}
