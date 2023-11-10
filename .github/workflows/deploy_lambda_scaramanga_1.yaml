@@ -1,0 +1,70 @@
+name: Deploy to Lambda
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+      project_code:
+        required: true
+        type: string
+      account_id:
+        default: ''
+        required: false
+        type: string
+env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  PROJECT_CODE: ${{ inputs.project_code }}
+  ACCOUNT_ID: ${{ inputs.account_id }}
+permissions:
+      id-token: write
+      contents: write
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials via role assumption
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ env.ACCOUNT_ID != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
+
+      - name: Check that Docker image is pushed to ECR Registry
+        run: |
+          if [ "$(aws ecr list-images --repository-name ${PROJECT_CODE} | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
+            echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment";
+          else
+            echo "[ERROR] Docker Image with tag ${IMAGE_TAG} doesn't exist!, exit deployment";
+            exit 1
+          fi
+
+      - name: Deploy to Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name ${PROJECT_CODE} \
+            --image-uri ${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${PROJECT_CODE}:${IMAGE_TAG}
+
+          retries=0;
+          
+          while [[ $status -ne 1 ]] && [[ $retries -le "300" ]]
+          do
+            status=$(aws lambda get-function \
+            --function-name ${PROJECT_CODE} \
+            --query 'Configuration.[LastUpdateStatus]' \
+            | grep -c Successful||true)
+            sleep 1s;
+            retries=$(($retries + 1)) 
+          done
+          if [ $retries -ge "300" ]
+          then
+            echo "[ERROR] Function not deployed yet, call your confidence DevOps"
+            aws lambda get-function \
+            --function-name ${PROJECT_CODE} \
+            --query 'Configuration.[LastUpdateStatus]'
+            exit 1
+          else
+            echo "[INFO] Function deployed Succesfully"
+          fi
