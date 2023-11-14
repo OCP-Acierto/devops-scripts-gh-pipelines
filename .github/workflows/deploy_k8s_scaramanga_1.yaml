@@ -29,6 +29,10 @@ on:
         default: ''
         required: false
         type: string
+      has_configmap:
+        default: ''
+        required: false
+        type: string
     secrets:
       gh_pull_repo_pat:
         required: true
@@ -44,6 +48,7 @@ env:
   KUBECTL_VERSION: v1.23.6
   ACCOUNT_ID: ${{ inputs.account_id }}
   CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
+  HAS_CONFIGMAP: ${{ inputs.HAS_CONFIGMAP }}
 permissions:
       id-token: write
       contents: write
@@ -126,6 +131,7 @@ jobs:
               --from-literal=env="$(cat env_file_k8s)" \
               -o yaml --dry-run=client \
           | kubectl apply -f -
+        if: ${{ env.HAS_CONFIGMAP != 'false' }}
         
       - name: Update Configmaps with array (PHP)
         run: |
