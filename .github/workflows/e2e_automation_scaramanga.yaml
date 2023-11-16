@@ -50,11 +50,6 @@ jobs:
         with:
           chrome-version: ${{ inputs.chrome_version }}
 
-      - name: Version
-        run: |
-          echo "[INFO] Installed chromium version: ${{ steps.setup-chrome.outputs.chrome-version }}"
-          ${{ steps.setup-chrome.outputs.chrome-path }} --version
-
       - name: Execute e2e automation
         run: |         
           export $(grep -v '^#' ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env | xargs)
