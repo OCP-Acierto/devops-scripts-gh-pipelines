@@ -12,6 +12,10 @@ on:
         default: ''
         required: true
         type: string
+      chrome_version:
+        default: ''
+        required: true
+        type: string
     secrets:
       gh_pull_repo_pat:
         required: true
@@ -19,6 +23,7 @@ env:
   PROJECT_CODE: ${{ inputs.project_code }}
   DEPLOY_ENV: ${{ inputs.deploy_env }}
   RUN_COMMAND: ${{ inputs.run_command }}
+  CHROME_VERSION: ${{ inputs.chrome_version }}
 permissions:
       id-token: write
       contents: write
@@ -39,6 +44,16 @@ jobs:
           repository: OCP-Acierto/ocp-config-management
           token: ${{ secrets.gh_pull_repo_pat }}
           path: config
+
+      - name: Change browser to
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: ${{ inputs.chrome_version }}
+
+      - name: Version
+        run: |
+          echo "[INFO] Installed chromium version: ${{ steps.setup-chrome.outputs.chrome-version }}"
+          ${{ steps.setup-chrome.outputs.chrome-path }} --version
 
       - name: Execute e2e automation
         run: |         
