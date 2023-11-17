@@ -45,11 +45,6 @@ jobs:
           token: ${{ secrets.gh_pull_repo_pat }}
           path: config
 
-      - name: Change browser to
-        uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: ${{ inputs.chrome_version }}
-
       - name: Execute e2e automation
         run: |         
           export $(grep -v '^#' ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env | xargs)
