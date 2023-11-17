@@ -12,10 +12,6 @@ on:
         default: ''
         required: true
         type: string
-      chrome_version:
-        default: ''
-        required: true
-        type: string
     secrets:
       gh_pull_repo_pat:
         required: true
@@ -23,7 +19,6 @@ env:
   PROJECT_CODE: ${{ inputs.project_code }}
   DEPLOY_ENV: ${{ inputs.deploy_env }}
   RUN_COMMAND: ${{ inputs.run_command }}
-  CHROME_VERSION: ${{ inputs.chrome_version }}
 permissions:
       id-token: write
       contents: write
