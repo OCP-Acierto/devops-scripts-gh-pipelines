@@ -17,6 +17,10 @@ on:
         default: ''
         required: false
         type: string
+      docker_context:
+        default: ''
+        required: false
+        type: string
       max_num_failed_tests:
         default: '1'
         required: false
@@ -68,6 +72,7 @@ env:
   AWS_REPOSITORY: ${{ inputs.aws_repository }}
   DOCKER_FILE: ${{ inputs.docker_file }}
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
+  DOCKER_CONTEXT: ${{ inputs.docker_context }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
   UNIT_TESTS: ${{ inputs.unit_tests }}
@@ -180,7 +185,7 @@ jobs:
             ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest" } \
             ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest" } \
-            --file ${DOCKER_FILE} .
+            --file ${DOCKER_FILE} ${DOCKER_CONTEXT}.
 
       - name: Push image to AWS ECR PROD
         if: ${{ env.ACCOUNT_ID_PROD != '' }}
