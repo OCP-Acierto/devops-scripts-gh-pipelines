@@ -185,7 +185,7 @@ jobs:
             ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest" } \
             ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest" } \
-            --file ${DOCKER_FILE} ${DOCKER_CONTEXT}.
+            --file ${DOCKER_FILE} "${DOCKER_CONTEXT}."
 
       - name: Push image to AWS ECR PROD
         if: ${{ env.ACCOUNT_ID_PROD != '' }}
