@@ -8,7 +8,7 @@ on:
         type: string
       aws_registry_lab:
         default: ''
-        required: true
+        required: false
         type: string
       aws_registry_stage:
         default: ''
@@ -59,9 +59,9 @@ on:
         type: string
     secrets:
       aws_access_key_id_lab:
-        required: true
+        required: false
       aws_secret_access_key_lab:
-        required: true
+        required: false
       aws_access_key_id_stage:
         required: true
       aws_secret_access_key_stage:
