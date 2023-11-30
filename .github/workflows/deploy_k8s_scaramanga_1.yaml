@@ -124,8 +124,8 @@ jobs:
           done
 
           export $(cat env_file | xargs)
-          echo "[INFO] Create Configmap with envfile ./config/new-${DEPLOY_ENV}/${PROJECT_CODE}/.env"
-          envsubst < ./config/new-${DEPLOY_ENV}/${PROJECT_CODE}/.env > env_file_k8s
+          echo "[INFO] Create Configmap with envfile ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env"
+          envsubst < ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env > env_file_k8s
 
           kubectl create configmap "${PROJECT_CODE}-env" \
               --from-literal=env="$(cat env_file_k8s)" \
@@ -143,7 +143,7 @@ jobs:
             CONFIG_PATH=$(echo ${CONFIGMAP_ARRAY} | jq -r ".[${i}] .config_path")
 
             kubectl create configmap "${PROJECT_CODE}-${CONFIG_CODE}" \
-                --from-literal=${CONFIG_FILE}="$(cat ./config/new-${DEPLOY_ENV}/${PROJECT_CODE}/${CONFIG_PATH})" \
+                --from-literal=${CONFIG_FILE}="$(cat ./config/${DEPLOY_ENV}/${PROJECT_CODE}/${CONFIG_PATH})" \
                 -o yaml --dry-run=client \
             | kubectl apply -f -
           done
@@ -151,7 +151,7 @@ jobs:
         
       - name: Deploy to k8s
         run: |
-          K8S_PATH="./k8s/scaramanga/new-${DEPLOY_ENV}/projects/${PROJECT_CODE}"
+          K8S_PATH="./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}"
           TIMEOUT=360s
 
           if [ -f "${K8S_PATH}/service.yaml" ]; then
