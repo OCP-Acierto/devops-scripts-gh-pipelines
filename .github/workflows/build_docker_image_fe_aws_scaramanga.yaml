@@ -6,10 +6,6 @@ on:
         default: 'latest'
         required: true
         type: string
-      aws_registry_lab:
-        default: ''
-        required: false
-        type: string
       aws_registry_stage:
         default: ''
         required: true
@@ -41,10 +37,6 @@ on:
         default: '80'
         required: false
         type: string
-      account_id_lab:
-        default: ''
-        required: false
-        type: string
       account_id_non_prod:
         default: ''
         required: false
@@ -58,10 +50,6 @@ on:
         required: false
         type: string
     secrets:
-      aws_access_key_id_lab:
-        required: false
-      aws_secret_access_key_lab:
-        required: false
       aws_access_key_id_stage:
         required: true
       aws_secret_access_key_stage:
@@ -78,7 +66,6 @@ on:
         required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
-  AWS_REGISTRY_LAB: ${{ inputs.aws_registry_lab }}
   AWS_REGISTRY_STAGE: ${{ inputs.aws_registry_stage }}
   AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry_non_prod }}
   AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
@@ -87,7 +74,6 @@ env:
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
-  ACCOUNT_ID_LAB: ${{ inputs.account_id_lab }}
   ACCOUNT_ID_NON_PROD: ${{ inputs.account_id_non_prod }}
   ACCOUNT_ID_STAGE: ${{ inputs.account_id_stage }}
   ACCOUNT_ID_PROD: ${{ inputs.account_id_prod }}
@@ -104,46 +90,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Configure AWS Credentials LAB
-        uses:  aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.aws_access_key_id_lab }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key_lab }}
-          aws-region: eu-west-1
-        if: ${{ env.AWS_REGISTRY_LAB != '' }} && ${{ env.ACCOUNT_ID_LAB == '' }}
-
-      - name: Configure AWS credentials via role assumption
-        uses: aws-actions/configure-aws-credentials@v2
-        if: ${{ env.ACCOUNT_ID_LAB != '' }}
-        with:
-          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_LAB }}:role/gha_oidc_assume_role"
-          role-session-name: GithubActions
-          aws-region: eu-west-1
-
-      - name: Login to Amazon ECR LAB
-        uses: aws-actions/amazon-ecr-login@v1
-        if: ${{ env.AWS_REGISTRY_LAB != '' }}
-
-      - name: Build & tag image to AWS ECR LAB
-        run: |
-          echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_LAB}"
-          docker build \
-            ${DOCKER_BUILD_ARGS} \
-            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
-            --build-arg AWS_REGISTRY=${AWS_REGISTRY_LAB} \
-            --tag ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest \
-            --file ${DOCKER_FILE} .
-        if: ${{ env.AWS_REGISTRY_LAB != '' }}
-
-      - name: Push image to AWS ECR LAB
-        run: |
-          echo "[INFO] Pushing to LAB ${AWS_REGISTRY_LAB}"
-          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest
-        if: ${{ env.AWS_REGISTRY_LAB != '' }}
-
 
       - name: Configure AWS Credentials STAGE
         uses:  aws-actions/configure-aws-credentials@v2
