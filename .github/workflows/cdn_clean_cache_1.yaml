@@ -14,11 +14,6 @@ on:
         default: ''
         required: false
         type: string
-    secrets:
-      aws_access_key_id:
-        required: true
-      aws_secret_access_key:
-        required: false
 env:
   CLOUDFRONT_ID: ${{ inputs.cloudfront_id }}
   CLOUDFRONT_INVALIDATION: ${{ inputs.cloudfront_invalidation }}
@@ -31,17 +26,8 @@ jobs:
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
-      - name: Configure AWS Credentials
-        uses:  aws-actions/configure-aws-credentials@v2
-        if: ${{ env.ACCOUNT_ID == '' }}
-        with:
-          aws-access-key-id: ${{ secrets.aws_access_key_id }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
-          aws-region: eu-west-1
-
       - name: Configure AWS credentials via role assumption
         uses: aws-actions/configure-aws-credentials@v2
-        if: ${{ env.ACCOUNT_ID != '' }}
         with:
           role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
           role-session-name: GithubActions
