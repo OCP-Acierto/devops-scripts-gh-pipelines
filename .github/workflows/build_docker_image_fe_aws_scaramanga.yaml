@@ -6,10 +6,6 @@ on:
         default: 'latest'
         required: true
         type: string
-      aws_registry_non_prod:
-        default: ''
-        required: false
-        type: string
       aws_registry_prod:
         default: ''
         required: false
@@ -33,19 +29,11 @@ on:
         default: '80'
         required: false
         type: string
-      account_id_non_prod:
-        default: ''
-        required: false
-        type: string
       account_id_prod:
         default: ''
         required: false
         type: string
     secrets:
-      aws_access_key_id_non_prod:
-        required: false
-      aws_secret_access_key_non_prod:
-        required: false
       aws_access_key_id_prod:
         required: false
       aws_secret_access_key_prod:
@@ -54,14 +42,12 @@ on:
         required: false
 env:
   IMAGE_TAG: ${{ inputs.image_tag }}
-  AWS_REGISTRY_NON_PROD: ${{ inputs.aws_registry_non_prod }}
   AWS_REGISTRY_PROD: ${{ inputs.aws_registry_prod }}
   AWS_REPOSITORY: ${{ inputs.aws_repository }}
   DOCKER_FILE: ${{ inputs.docker_file }}
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
-  ACCOUNT_ID_NON_PROD: ${{ inputs.account_id_non_prod }}
   ACCOUNT_ID_PROD: ${{ inputs.account_id_prod }}
 permissions:
       id-token: write
@@ -76,46 +62,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Configure AWS Credentials NON-PROD
-        uses:  aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.aws_access_key_id_non_prod }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key_non_prod }}
-          aws-region: eu-west-1
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }} && ${{ env.ACCOUNT_ID_NON_PROD == '' }}
-
-      - name: Configure AWS credentials via role assumption
-        uses: aws-actions/configure-aws-credentials@v2
-        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
-        with:
-          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_NON_PROD }}:role/gha_oidc_assume_role"
-          role-session-name: GithubActions
-          aws-region: eu-west-1
-
-      - name: Login to Amazon ECR NON-PROD
-        uses: aws-actions/amazon-ecr-login@v1
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
-
-      - name: Build & tag image to AWS ECR NON-PROD
-        run: |
-          echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_NON_PROD}"
-          docker build \
-            ${DOCKER_BUILD_ARGS} \
-            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
-            --build-arg AWS_REGISTRY=${AWS_REGISTRY_NON_PROD} \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
-            --file ${DOCKER_FILE} .
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
-
-      - name: Push image to AWS ECR NON-PROD
-        run: |
-          echo "[INFO] Pushing to NON-PROD ${AWS_REGISTRY_NON_PROD}"
-          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
-        if: ${{ env.AWS_REGISTRY_NON_PROD != '' }}
-
 
       - name: Configure AWS Credentials PROD
         uses:  aws-actions/configure-aws-credentials@v2

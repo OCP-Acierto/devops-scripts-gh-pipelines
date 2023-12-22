@@ -27,7 +27,7 @@ on:
       secret_suffix:
         required: true
         type: string
-      account_id:
+      aws_account_id:
         default: ''
         required: false
         type: string
@@ -46,7 +46,7 @@ env:
   SECRET_SUFFIX: ${{ inputs.secret_suffix }}
   CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
   KUBECTL_VERSION: v1.26.0
-  ACCOUNT_ID: ${{ inputs.account_id }}
+  AWS_ACCOUNT_ID: ${{ inputs.aws_account_id }}
 permissions:
       id-token: write
       contents: write
@@ -105,7 +105,7 @@ jobs:
       - name: Configure AWS credentials via role assumption
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
+          role-to-assume: "arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/gha_oidc_assume_role"
           role-session-name: GithubActions
           aws-region: eu-west-1
 
