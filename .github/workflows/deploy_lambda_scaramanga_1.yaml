@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials via role assumption
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         if: ${{ env.ACCOUNT_ID != '' }}
         with:
           role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
