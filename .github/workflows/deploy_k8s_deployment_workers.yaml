@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout kubernetes repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: OCP-Acierto/devops-scripts-k8s
           token: ${{ secrets.gh_pull_repo_pat }}

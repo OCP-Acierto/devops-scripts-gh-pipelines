@@ -46,14 +46,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout kubernetes repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: OCP-Acierto/devops-scripts-k8s
           token: ${{ secrets.gh_pull_repo_pat }}
           path: k8s
 
       - name: Checkout kubernetes repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: OCP-Acierto/ocp-config-management
           token: ${{ secrets.gh_pull_repo_pat }}
@@ -68,7 +68,7 @@ jobs:
           kubectl version --output json | jq '.clientVersion.gitVersion'
 
       - name: Configure AWS credentials via role assumption
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/gha_oidc_assume_role"
           role-session-name: GithubActions

@@ -113,10 +113,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout config-management repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: OCP-Acierto/shared-config-management
           token: ${{ secrets.gh_pull_repo_pat }}
