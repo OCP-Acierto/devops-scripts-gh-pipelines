@@ -45,7 +45,7 @@ env:
   DEPLOY_ENV: ${{ inputs.deploy_env }}
   EKS_CLUSTER_NAME: ${{ inputs.eks_cluster_name }}
   EKS_CLUSTER_ZONE: ${{ inputs.eks_cluster_zone }}
-  KUBECTL_VERSION: v1.23.6
+  KUBECTL_VERSION: v1.25.5
   ACCOUNT_ID: ${{ inputs.account_id }}
   CONFIGMAP_ARRAY: ${{ inputs.configmap_array }}
   HAS_CONFIGMAP: ${{ inputs.HAS_CONFIGMAP }}
