@@ -120,7 +120,7 @@ jobs:
             value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
 
             IFS='/' read -r -a env_name <<< "$secret"
-            echo "${env_name[2]^^}=${value}" >> env_file
+            echo "${env_name[2]^^}='${value}'" >> env_file
           done
 
           export $(cat env_file | xargs)
