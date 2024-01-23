@@ -22,7 +22,7 @@ on:
         required: true
         type: string
       workers_array:
-        required: false
+        required: true
         type: string
     secrets:
       gcp_adm_k8s_sa_credentials:
