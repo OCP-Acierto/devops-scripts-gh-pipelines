@@ -93,7 +93,7 @@ jobs:
       - name: Use Node 18
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version-file: 'package.json'
 
       - name: Yarn Install
         if: ${{ env.TEST_ENABLED == 'true' }}
