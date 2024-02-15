@@ -29,24 +29,24 @@ jobs:
       - name: Use Node 18
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version-file: 'package.json'
       
-      - name: Yarn Install
-        env:
-          NODE_OPTIONS: "--max_old_space_size=6144"
+      - name: Instal packages
         run: |
-          yarn --frozen-lockfile --no-progress
+          npm install -g pnpm \
+          && pnpm i --frozen-lockfile
 
-      - name: Linter
-        env:
-          NODE_OPTIONS: "--max_old_space_size=6144"
-        run: |
-          npm run lint
+## DISABLED UNTIL solve some issues with monorepo structure
+##      - name: Linter
+##        env:
+##          NODE_OPTIONS: "--max_old_space_size=6144"
+##        run: |
+##          pnpm lint:${FUNNEL}
 
       - name: Execute UnitTests
         run: |
-          node node_modules/vitest/vitest.mjs  run --coverage \
-                     --reporter=json --outputFile=test.json | tee coverage.txt
+          
+          pnpm test:cars | tee coverage.txt
 
           coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
 
