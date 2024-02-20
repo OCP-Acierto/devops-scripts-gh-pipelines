@@ -26,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node 18
+      - name: Use Node from package.json
         uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'

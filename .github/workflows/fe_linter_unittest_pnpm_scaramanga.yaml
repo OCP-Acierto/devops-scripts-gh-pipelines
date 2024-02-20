@@ -2,6 +2,10 @@ name: Linter & UnitTest
 on:
   workflow_call:
     inputs:
+      project_name:
+        default: ''
+        required: true
+        type: string
       max_num_failed_tests:
         default: '1'
         required: false
@@ -14,6 +18,7 @@ on:
       gh_npm_registry_pat:
         required: false
 env:
+  PROJECT_NAME: ${{ inputs.project_name }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
 jobs:
@@ -26,11 +31,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node 18
+      - name: Use Node from package.json
         uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
-      
+
       - name: Instal packages
         run: |
           npm install -g pnpm \
@@ -45,11 +50,12 @@ jobs:
 
       - name: Execute UnitTests
         run: |
-          pnpm coverage:cars | tee coverage.txt
+          pnpm coverage:${PROJECT_NAME} | tee coverage.txt
 
-          coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
+          echo "[INFO] Getting coverage from All files - % Branch"
+          coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $3}' | sed -r 's/\s+//g')
 
-          num_failed_tests=$(cat test.json | jq .numFailedTests)
+          num_failed_tests=$(cat coverage.txt | grep 'Tests  ')
 
           if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
             echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS}
