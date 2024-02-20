@@ -30,8 +30,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
-      
-      - name: Yarn Install
+
+      - name: Instal packages
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
         run: |
@@ -47,6 +47,7 @@ jobs:
         env:
           GH_NPM_REGISTRY_PAT: "${{ secrets.gh_npm_registry_pat }}"
         run: |
+          echo "[INFO] Getting coverage from All files - % Stmts"
           npm run test:cov | tee coverage.txt
 
           coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
@@ -54,7 +55,7 @@ jobs:
           num_failed_tests=$(cat test.json | jq .numFailedTests)
 
           if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
-            echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS} 
+            echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS}
                   allow tests to fail, exit with errlvl 1"
             exit 1
           else

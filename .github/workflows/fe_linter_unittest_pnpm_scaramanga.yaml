@@ -50,10 +50,10 @@ jobs:
 
       - name: Execute UnitTests
         run: |
+          echo "[INFO] Getting coverage from All files - % Stmts"
           pnpm coverage:${PROJECT_NAME} | tee coverage.txt
 
-          echo "[INFO] Getting coverage from All files - % Branch"
-          coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $3}' | sed -r 's/\s+//g')
+          coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
 
           num_failed_tests=$(cat coverage.txt | grep 'Tests  ' | grep 'failed' | awk '{print $2}')
 

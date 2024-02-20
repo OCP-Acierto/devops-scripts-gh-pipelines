@@ -30,8 +30,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
-      
-      - name: Yarn Install
+
+      - name: Instal packages
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
         run: |
@@ -45,6 +45,7 @@ jobs:
 
       - name: Execute UnitTests
         run: |
+          echo "[INFO] Getting coverage from All files - % Stmts"
           node node_modules/vitest/vitest.mjs  run --coverage \
                      --reporter=json --outputFile=test.json | tee coverage.txt
 
