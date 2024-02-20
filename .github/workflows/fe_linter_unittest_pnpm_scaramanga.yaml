@@ -2,6 +2,10 @@ name: Linter & UnitTest
 on:
   workflow_call:
     inputs:
+      project_name:
+        default: ''
+        required: true
+        type: string
       max_num_failed_tests:
         default: '1'
         required: false
@@ -14,6 +18,7 @@ on:
       gh_npm_registry_pat:
         required: false
 env:
+  PROJECT_NAME: ${{ inputs.project_name }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
 jobs:
@@ -26,31 +31,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node 18
+      - name: Use Node from package.json
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-      
-      - name: Yarn Install
-        env:
-          NODE_OPTIONS: "--max_old_space_size=6144"
-        run: |
-          yarn --frozen-lockfile --no-progress
+          node-version-file: 'package.json'
 
-      - name: Linter
-        env:
-          NODE_OPTIONS: "--max_old_space_size=6144"
+      - name: Instal packages
         run: |
-          npm run lint
+          npm install -g pnpm \
+          && pnpm i --frozen-lockfile
+
+## DISABLED UNTIL solve some issues with monorepo structure
+##      - name: Linter
+##        env:
+##          NODE_OPTIONS: "--max_old_space_size=6144"
+##        run: |
+##          pnpm lint:${FUNNEL}
 
       - name: Execute UnitTests
         run: |
-          node node_modules/vitest/vitest.mjs  run --coverage \
-                     --reporter=json --outputFile=test.json | tee coverage.txt
+          pnpm coverage:${PROJECT_NAME} | tee coverage.txt
 
-          coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
+          echo "[INFO] Getting coverage from All files - % Branch"
+          coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $3}' | sed -r 's/\s+//g')
 
-          num_failed_tests=$(cat test.json | jq .numFailedTests)
+          num_failed_tests=$(cat coverage.txt | grep 'Tests  ' | grep 'failed' | awk '{print $2}')
 
           if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
             echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS}

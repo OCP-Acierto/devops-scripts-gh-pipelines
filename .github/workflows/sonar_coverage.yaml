@@ -90,7 +90,7 @@ jobs:
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
-      - name: Use Node 18
+      - name: Use Node from package.json
         uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
