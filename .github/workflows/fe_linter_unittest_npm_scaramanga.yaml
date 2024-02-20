@@ -35,7 +35,7 @@ jobs:
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
         run: |
-          yarn --frozen-lockfile --no-progress
+          npm ci
 
       - name: Linter
         env:
@@ -44,16 +44,18 @@ jobs:
           npm run lint
 
       - name: Execute UnitTests
+        env:
+          GH_NPM_REGISTRY_PAT: "${{ secrets.gh_npm_registry_pat }}"
+        if: ${{ env.UNIT_TESTS == 'true' }}
         run: |
-          node node_modules/vitest/vitest.mjs  run --coverage \
-                     --reporter=json --outputFile=test.json | tee coverage.txt
+          npm run test:cov | tee coverage.txt
 
           coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
 
           num_failed_tests=$(cat test.json | jq .numFailedTests)
 
           if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
-            echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS}
+            echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS} 
                   allow tests to fail, exit with errlvl 1"
             exit 1
           else
