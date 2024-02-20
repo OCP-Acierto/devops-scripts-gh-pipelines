@@ -55,7 +55,7 @@ jobs:
           echo "[INFO] Getting coverage from All files - % Branch"
           coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $3}' | sed -r 's/\s+//g')
 
-          num_failed_tests=$(cat coverage.txt | grep 'Tests  ')
+          num_failed_tests=$(cat coverage.txt | grep 'Tests  ' | grep 'failed' | awk '{print $2}')
 
           if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
             echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS}

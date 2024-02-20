@@ -21,10 +21,6 @@ on:
         default: '1'
         required: false
         type: string
-      min_percentage_coverage:
-        default: '80'
-        required: false
-        type: string
       aws_region:
         default: ''
         required: true
@@ -54,7 +50,6 @@ env:
   DOCKER_FILE: ${{ inputs.docker_file }}
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
-  MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
   AWS_REGION: ${{ inputs.aws_region }}
   ACCOUNT_ID_LAB: ${{ inputs.account_id_lab }}
   ACCOUNT_ID_NON_PROD: ${{ inputs.account_id_non_prod }}
