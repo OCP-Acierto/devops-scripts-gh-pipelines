@@ -57,6 +57,10 @@ jobs:
 
           num_failed_tests=$(cat coverage.txt | grep 'Tests  ' | grep 'failed' | awk '{print $2}')
 
+          if [ -z "${num_failed_tests}" ]; then
+            num_failed_tests=0
+          fi
+
           if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
             echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS}
                   allow tests to fail, exit with errlvl 1"
