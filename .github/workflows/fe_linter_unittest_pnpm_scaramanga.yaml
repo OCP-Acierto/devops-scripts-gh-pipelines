@@ -21,6 +21,7 @@ env:
   PROJECT_NAME: ${{ inputs.project_name }}
   MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
   MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
+  TZ: CET
 jobs:
   job:
     timeout-minutes: 30
