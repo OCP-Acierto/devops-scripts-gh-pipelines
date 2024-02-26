@@ -42,12 +42,11 @@ jobs:
           npm install -g pnpm \
           && pnpm i --frozen-lockfile
 
-## DISABLED UNTIL solve some issues with monorepo structure
-##      - name: Linter
-##        env:
-##          NODE_OPTIONS: "--max_old_space_size=6144"
-##        run: |
-##          pnpm lint:${FUNNEL}
+      - name: Linter
+        env:
+          NODE_OPTIONS: "--max_old_space_size=6144"
+        run: |
+          pnpm run -r lint
 
       - name: Execute UnitTests
         run: |
