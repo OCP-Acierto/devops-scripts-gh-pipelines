@@ -84,7 +84,10 @@ jobs:
 
       - name: Deploy to k8s
         run: |        
-          echo "[INFO] Apply migrations and DB update using POD ${POD}"
           POD=$(kubectl get pods | grep "${PROJECT_CODE}" | grep "Running" | awk '{print $1}' | head -n1)
+          echo "[INFO] Apply migrations and DB update using POD ${POD}"
+
+          echo "[INFO] Execute artisan migrate..."
           kubectl exec -t "${POD}" --container "fpm" -- /bin/bash -e -c "/usr/bin/php /app/artisan migrate"
+          echo "[INFO] Execute artisan DB update..."
           kubectl exec -t "${POD}" --container "fpm" -- /bin/bash -e -c "/usr/bin/php /app/artisan db:update"

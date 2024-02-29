@@ -93,6 +93,7 @@ jobs:
           kubectl version --output json | jq '.serverVersion.gitVersion'
 
       - name: Check that Docker image is pushed to ECR Registry
+        id: docker-image-tag
         run: |
           if [ "${ECR_REPOSITORY}" != "" ]; then
             REPOSITORY_NAME=${ECR_REPOSITORY}
@@ -104,9 +105,13 @@ jobs:
           if [ "$(aws ecr list-images --repository-name "${REPOSITORY_NAME}" | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
             echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment";
           else
-            echo "[ERROR] Docker Image with tag ${IMAGE_TAG} doesn't exist!, exit deployment";
-            exit 1
+            echo "[INFO] Docker Image with tag ${IMAGE_TAG} doesn't exist, falling back to last available IMAGE";
+            IMAGE_TAG=$(aws ecr describe-images --repository-name "${REPOSITORY_NAME}" \
+              --query 'sort_by(imageDetails,& imagePushedAt)[*]' | jq .[-1].imageTags[0])
+            echo "[INFO] Using image TAG ${IMAGE_TAG}";
           fi
+
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
 
       - name: Update Configmap
         run: |
@@ -153,6 +158,7 @@ jobs:
         run: |
           K8S_PATH="./k8s/scaramanga/${DEPLOY_ENV}/projects/${PROJECT_CODE}"
           TIMEOUT=360s
+          IMAGE_TAG="${{ steps.docker-image-tag.outputs.IMAGE_TAG }}"
 
           if [ -f "${K8S_PATH}/service.yaml" ]; then
             echo "[INFO] Applying service..."
