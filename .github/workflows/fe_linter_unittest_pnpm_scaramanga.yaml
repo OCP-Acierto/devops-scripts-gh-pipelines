@@ -6,21 +6,16 @@ on:
         default: ''
         required: true
         type: string
-      max_num_failed_tests:
-        default: '1'
-        required: false
-        type: string
-      min_percentage_coverage:
-        default: '80'
-        required: false
+    pnpm_version:
+        default: ''
+        required: true
         type: string
     secrets:
       gh_npm_registry_pat:
         required: false
 env:
   PROJECT_NAME: ${{ inputs.project_name }}
-  MAX_NUM_FAILED_TESTS: ${{ inputs.max_num_failed_tests }}
-  MIN_PERCENTAGE_COVERAGE: ${{ inputs.min_percentage_coverage }}
+  PNPM_VERSION: ${{ inputs.pnpm_version }}
   TZ: CET
 jobs:
   job:
@@ -39,7 +34,7 @@ jobs:
 
       - name: Instal packages
         run: |
-          npm install -g pnpm \
+          npm install -g pnpm@${PNPM_VERSION} \
           && pnpm i --frozen-lockfile
 
       - name: Linter
@@ -50,29 +45,5 @@ jobs:
 
       - name: Execute UnitTests
         run: |
-          echo "[INFO] Getting coverage from All files - % Stmts"
-          pnpm coverage:${PROJECT_NAME} | tee coverage.txt
-
-          coverage=$(cat coverage.txt | grep 'All files' | awk -F'|' '{print $2}' | sed -r 's/\s+//g')
-
-          num_failed_tests=$(cat coverage.txt | grep 'Tests  ' | grep 'failed' | awk '{print $2}')
-
-          if [ -z "${num_failed_tests}" ]; then
-            num_failed_tests=0
-          fi
-
-          if [ "${num_failed_tests}" -gt "${MAX_NUM_FAILED_TESTS}" ]; then
-            echo "[ERROR] ${num_failed_tests} Tests Failed, there are only ${MAX_NUM_FAILED_TESTS}
-                  allow tests to fail, exit with errlvl 1"
-            exit 1
-          else
-            echo "[INFO] Tests Passed successfully with ${num_failed_tests} failed, continue"
-          fi
-
-          if  (( $(echo "$coverage > $MIN_PERCENTAGE_COVERAGE" | bc -l) )); then
-            echo "[INFO] Coverage passed successfully with ${coverage}%, continue"
-          else
-            echo "[ERROR] Coverage ${coverage} is less than the minimum of ${MIN_PERCENTAGE_COVERAGE},
-                  exit with errlvl 1"
-            exit 1
-          fi
+          echo "[INFO] Executing unit tests..."
+          pnpm test:${PROJECT_NAME}
