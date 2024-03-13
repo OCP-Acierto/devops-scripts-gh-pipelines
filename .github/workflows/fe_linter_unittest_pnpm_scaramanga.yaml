@@ -6,14 +6,6 @@ on:
         default: ''
         required: true
         type: string
-      max_num_failed_tests:
-        default: '1'
-        required: false
-        type: string
-      min_percentage_coverage:
-        default: '80'
-        required: false
-        type: string
     secrets:
       gh_npm_registry_pat:
         required: false
