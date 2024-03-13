@@ -6,11 +6,16 @@ on:
         default: ''
         required: true
         type: string
+    pnpm_version:
+        default: ''
+        required: true
+        type: string
     secrets:
       gh_npm_registry_pat:
         required: false
 env:
   PROJECT_NAME: ${{ inputs.project_name }}
+  PNPM_VERSION: ${{ inputs.pnpm_version }}
   TZ: CET
 jobs:
   job:
