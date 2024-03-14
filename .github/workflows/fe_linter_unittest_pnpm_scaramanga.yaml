@@ -6,7 +6,7 @@ on:
         default: ''
         required: true
         type: string
-    pnpm_version:
+      pnpm_version:
         default: ''
         required: true
         type: string
