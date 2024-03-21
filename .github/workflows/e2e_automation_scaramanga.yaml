@@ -51,4 +51,5 @@ jobs:
             "
 
           npm ci
+          npx playwright install
           npm run ${RUN_COMMAND}
