@@ -89,5 +89,5 @@ jobs:
 
           echo "[INFO] Execute artisan migrate..."
           kubectl exec -t "${POD}" --container "fpm" -- /bin/bash -e -c "/usr/bin/php /app/artisan migrate"
-          ##echo "[INFO] Execute artisan DB update..."
-          ##kubectl exec -t "${POD}" --container "fpm" -- /bin/bash -e -c "/usr/bin/php /app/artisan db:update"
+          echo "[INFO] Execute artisan DB update..."
+          kubectl exec -t "${POD}" --container "fpm" -- /bin/bash -e -c "/usr/bin/php /app/artisan db:update"
