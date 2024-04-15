@@ -2,6 +2,9 @@ name: Deploy to K8s
 on:
   workflow_call:
     inputs:
+      manual_image_tag:
+        required: false
+        type: string
       image_tag:
         required: true
         type: string
@@ -39,7 +42,8 @@ on:
       ingress_apikey:
         required: false
 env:
-  IMAGE_TAG: ${{ inputs.image_tag }}
+  MANUAL_IMAGE_TAG: ${{ inputs.manual_image_tag }}
+  LAST_IMAGE_TAG: ${{ inputs.image_tag }}
   PROJECT_CODE: ${{ inputs.project_code }}
   ECR_REPOSITORY: ${{ inputs.ecr_repository }}
   DEPLOY_ENV: ${{ inputs.deploy_env }}
@@ -101,7 +105,14 @@ jobs:
             REPOSITORY_NAME=${PROJECT_CODE}
           fi
 
-          echo "[INFO] Search Image in repository ${REPOSITORY_NAME}"
+          if [ "${MANUAL_IMAGE_TAG}" != "" ]; then
+            IMAGE_TAG=${MANUAL_IMAGE_TAG}
+          else
+            IMAGE_TAG=${LAST_IMAGE_TAG}
+          fi
+
+
+          echo "[INFO] Search Image with tag ${IMAGE_TAG} in repository ${REPOSITORY_NAME}"
           if [ "$(aws ecr list-images --repository-name "${REPOSITORY_NAME}" | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
             echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment";
           else
