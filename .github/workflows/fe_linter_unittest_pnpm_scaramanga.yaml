@@ -2,10 +2,6 @@ name: Linter & UnitTest
 on:
   workflow_call:
     inputs:
-      project_name:
-        default: ''
-        required: true
-        type: string
       pnpm_version:
         default: ''
         required: true
@@ -14,7 +10,6 @@ on:
       gh_npm_registry_pat:
         required: false
 env:
-  PROJECT_NAME: ${{ inputs.project_name }}
   PNPM_VERSION: ${{ inputs.pnpm_version }}
   TZ: CET
 jobs:
@@ -46,4 +41,4 @@ jobs:
       - name: Execute UnitTests
         run: |
           echo "[INFO] Executing unit tests..."
-          pnpm test:${PROJECT_NAME}
+          pnpm test:coverage --silent --bail=1
