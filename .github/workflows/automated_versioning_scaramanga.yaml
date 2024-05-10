@@ -6,6 +6,10 @@ on:
         default: 'latest'
         required: true
         type: string
+      package_path:
+        default: ''
+        required: false
+        type: string
     secrets:
       gh_pull_repo_pat:
         required: true
@@ -16,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.gh_pull_repo_pat }}
+      PACKAGE_PATH: ${{ inputs.package_path }}
     permissions:
       id-token: write
       contents: write
@@ -30,6 +35,10 @@ jobs:
         run: |
           BUMP_VERSION=0
           NPM_VERSION=0
+
+          if [ "${PACKAGE_PATH}" != '' ];then
+            cd "${PACKAGE_PATH}"
+          fi
 
           echo "[INFO] Working on branch"
           git status
