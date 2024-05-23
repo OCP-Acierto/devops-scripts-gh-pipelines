@@ -107,7 +107,7 @@ jobs:
 
           if [ "${MANUAL_IMAGE_TAG}" != "" ]; then
             IMAGE_TAG=${MANUAL_IMAGE_TAG}
-            echo "[INFO] Search Image with tag ${IMAGE_TAG} in repository ${REPOSITORY_NAME}"
+            echo "[INFO] Search Image with MANUAL tag ${IMAGE_TAG} in repository ${REPOSITORY_NAME}"
             if [ "$(aws ecr list-images --repository-name "${REPOSITORY_NAME}" | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
               echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment"
             else
@@ -116,7 +116,7 @@ jobs:
             fi
           else
             IMAGE_TAG=${LAST_IMAGE_TAG}
-            echo "[INFO] Search Image with tag ${IMAGE_TAG} in repository ${REPOSITORY_NAME}"
+            echo "[INFO] Search Image with LAST tag ${IMAGE_TAG} in repository ${REPOSITORY_NAME}"
             if [ "$(aws ecr list-images --repository-name "${REPOSITORY_NAME}" | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
               echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment"
             else
