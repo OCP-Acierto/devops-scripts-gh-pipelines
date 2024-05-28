@@ -12,14 +12,6 @@ on:
       gcp_repository:
         required: true
         type: string
-      docker_file:
-        default: 'Dockerfile'
-        required: true
-        type: string
-      docker_build_args:
-        default: ''
-        required: false
-        type: string
       command:
         default: ''
         required: true
