@@ -1,0 +1,156 @@
+name: Sonar Scanner
+on:
+  workflow_call:
+    inputs:
+      project_code:
+        required: true
+        type: string
+      gcp_registry:
+        default: 'eu.gcr.io/internal-cdm/images'
+        required: true
+        type: string
+      gcp_repository:
+        required: true
+        type: string
+      docker_file:
+        default: 'Dockerfile'
+        required: true
+        type: string
+      docker_build_args:
+        default: ''
+        required: false
+        type: string
+      command:
+        default: ''
+        required: true
+        type: string
+      test_enabled:
+        default: ''
+        required: true
+        type: string
+      lint_command:
+        default: ''
+        required: false
+        type: string
+      sonar_exclusions:
+        default: ''
+        required: false
+        type: string
+      sonar_coverage_exclusions:
+        default: ''
+        required: false
+        type: string
+    secrets:
+      gcp_cdm_registry_sa_credentials:
+        required: true
+      sonar_token:
+        required: true
+      sonar_url:
+        required: true
+      gh_npm_registry_pat:
+        required: false
+      ocp_packages_actions_role:
+        required: false
+env:
+  GCP_REGISTRY: ${{ inputs.gcp_registry }}
+  GCP_REPOSITORY: ${{ inputs.gcp_repository }}
+  COMMAND: ${{ inputs.command }}
+  LINT_COMMAND: ${{ inputs.lint_command }}
+  TEST_ENABLED: ${{ inputs.test_enabled }}
+  SONAR_EXCLUSIONS: ${{ inputs.sonar_exclusions }}
+  SONAR_COVERAGE_EXCLUSIONS: ${{ inputs.sonar_coverage_exclusions }}
+  PROJECT_CODE: ${{ inputs.project_code }}
+  SONAR_URL: ${{ secrets.sonar_url }}
+  SONAR_TOKEN: ${{ secrets.sonar_token }}
+jobs:
+  job:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    env:
+      GH_NPM_REGISTRY_PAT: "${{ secrets.gh_npm_registry_pat }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials OCP-ARTIFACTS
+        uses: aws-actions/configure-aws-credentials@v4
+        if: ${{ env.OCP_PACKAGES_ACTIONS_ROLE != '' }}
+        with:
+          role-to-assume: ${{ env.OCP_PACKAGES_ACTIONS_ROLE }}
+          role-session-name: githubactions
+          aws-region: eu-west-1
+
+      - name: Authenticate to CodeArtifact
+        if: ${{ env.OCP_PACKAGES_ACTIONS_ROLE != '' }}
+        run: |
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ocp-packages-domain --duration-seconds 0 --query authorizationToken --output text)
+          echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
+          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+
+      - name: Use Node from package.json
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
+
+      - name: Yarn Install
+        if: ${{ env.TEST_ENABLED == 'true' }}
+        env:
+          NODE_OPTIONS: "--max_old_space_size=6144"
+          CODEARTIFACT_AUTH_TOKEN: "${{ env.CODEARTIFACT_AUTH_TOKEN }}"
+        run: |
+          yarn --frozen-lockfile --no-progress
+
+      - name: Coverage
+        env:
+          NODE_OPTIONS: "--max_old_space_size=6144"
+        run: |
+          ${COMMAND} || true
+
+      - name: Lint
+        if: ${{ env.LINT_COMMAND != '' }}
+        env:
+          NODE_OPTIONS: "--max_old_space_size=6144"
+        run: |
+          npm run lint:report
+
+      - name: Configure GCP Credentials
+        run: |
+          # IMPORTANT: SECRET MUST BE IN BASE64
+          touch gcp_cdm_registry_sa_credentials.json
+          echo "${{ secrets.gcp_cdm_registry_sa_credentials }}" | base64 -d > gcp_cdm_registry_sa_credentials.json
+
+          client_email=$(cat gcp_cdm_registry_sa_credentials.json | jq .client_email  -r)
+          project_id=$(cat gcp_cdm_registry_sa_credentials.json | jq .project_id  -r)
+
+          echo "[INFO] Get access to Gcloud ${project_id}"
+
+          gcloud auth activate-service-account "${client_email}" \
+            --key-file=gcp_cdm_registry_sa_credentials.json \
+            --project="${project_id}"
+
+          echo "[INFO] Use project $(gcloud config list --format=json | jq .core.project -r)"
+
+          rm -Rf gcp_cdm_registry_sa_credentials.json
+
+      - name: Configure Docker Credentials
+        run: |
+          gcloud auth configure-docker --quiet
+
+      - name: Sonar Scanner Execution
+        run: |
+          docker run --rm --workdir "/app" \
+              -v "$(pwd)/:/app/" \
+              "${GCP_REGISTRY}/${GCP_REPOSITORY}:latest" \
+              /bin/bash -e -c "/usr/bin/sonar-scanner \
+                      -Dsonar.projectKey=${PROJECT_CODE} \
+                      -Dsonar.sources=. \
+                      -Dsonar.host.url=${SONAR_URL} \
+                      -Dsonar.login=${SONAR_TOKEN} \
+                      -Dsonar.sourceEncoding=UTF-8 \
+                      -Dsonar.coverage.exclusions=**/*spec.ts,**/**/*spec.ts,**/*mock.ts,**/__mocks__/*,${SONAR_COVERAGE_EXCLUSIONS} \
+                      -Dsonar.exclusions=public/**,${SONAR_EXCLUSIONS} \
+                      -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info,/opt/clover/clover.xml
+                  "
