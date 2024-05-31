@@ -79,6 +79,5 @@ jobs:
                       -Dsonar.host.url=${SONAR_URL} \
                       -Dsonar.login=${SONAR_TOKEN} \
                       -Dsonar.sourceEncoding=UTF-8 \
-                      -Dsonar.exclusions=public/**,${SONAR_EXCLUSIONS} \
-                      -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info,/opt/clover/clover.xml
+                      -Dsonar.exclusions=public/**,${SONAR_EXCLUSIONS}
                   "
