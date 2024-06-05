@@ -96,7 +96,7 @@ jobs:
           echo "[INFO] Rsync cdn/ to ${GCP_CDN_PATH}"
           # -m option, perform a parallel (multi-threaded/multi-processing)
           # -q Causes gsutil to perform operations quietly
-          gsutil -q -m -h "${CACHE_CONTROL}" \
+          gsutil -m -h "${CACHE_CONTROL}" \
           rsync -r -d -x "${EXCLUDE}" "cdn/" "${GCP_CDN_PATH}"
 
           echo "[INFO] CDN Stats"
