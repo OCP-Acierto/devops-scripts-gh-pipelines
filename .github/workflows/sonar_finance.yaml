@@ -197,6 +197,7 @@ jobs:
           fi
 
           echo "[INFO] Execute phpunit tests"
+          PHP_VERSION=$(docker run --rm  --entrypoint php "${GCP_REGISTRY_PHPUNIT}/${GCP_REPOSITORY_PHPUNIT}:${IMAGE_TAG}" -v | awk '/^PHP/ {print $2}' | awk -F. '{print $1"."$2}')
           docker run -t --rm --workdir /app --network phpunit-test \
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/clover:/opt/clover" \
@@ -205,7 +206,7 @@ jobs:
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
               "${GCP_REGISTRY_PHPUNIT}/${GCP_REPOSITORY_PHPUNIT}:${IMAGE_TAG}" \
               /bin/bash -e -c "echo [INFO] Install PHP testing tools && \
-              apt-get update && apt-get -qq install -y php7.3-xdebug php7.3-mongodb && \
+              apt-get update && apt-get -qq install -y php${PHP_VERSION}-xdebug php${PHP_VERSION}-mongodb && \
               echo [INFO] Copy config /config-management/${PHPUNIT_CONFIG_PATH} && \
               cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing && \
               XDEBUG_MODE=coverage /app/vendor/bin/phpunit \
