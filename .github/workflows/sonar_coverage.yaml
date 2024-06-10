@@ -90,11 +90,6 @@ jobs:
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
-      - name: Use Node from package.json
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: 'package.json'
-
       - name: Yarn Install
         if: ${{ env.TEST_ENABLED == 'true' }}
         env:
