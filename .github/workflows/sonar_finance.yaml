@@ -65,7 +65,6 @@ on:
         required: false
         type: string
       runphp:
-        default: 'true'
         required: false
         type: string
     secrets:
