@@ -141,6 +141,6 @@ jobs:
 
             kubectl create configmap "${PROJECT_CODE}-${CONFIG_CODE}" \
                 --from-literal=${CONFIG_FILE}="$(cat ./config-management/${DEPLOY_ENV}/${CONFIG_PATH})" \
-                -o yaml --dry-run=client \
-            | kubectl apply -f -
+                -o yaml --dry-run=client > "${PROJECT_CODE}-${CONFIG_CODE}.yaml"
+            kubectl apply -f ${PROJECT_CODE}-${CONFIG_CODE}.yaml
           done
