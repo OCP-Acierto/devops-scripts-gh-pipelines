@@ -20,10 +20,6 @@ on:
         default: ''
         required: true
         type: string
-      lint_command:
-        default: ''
-        required: false
-        type: string
       sonar_exclusions:
         default: ''
         required: false
@@ -47,7 +43,6 @@ env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   COMMAND: ${{ inputs.command }}
-  LINT_COMMAND: ${{ inputs.lint_command }}
   TEST_ENABLED: ${{ inputs.test_enabled }}
   SONAR_EXCLUSIONS: ${{ inputs.sonar_exclusions }}
   SONAR_COVERAGE_EXCLUSIONS: ${{ inputs.sonar_coverage_exclusions }}
@@ -87,26 +82,20 @@ jobs:
         with:
           node-version-file: 'package.json'
 
-      - name: Yarn Install
+      - name: NPM Install
         if: ${{ env.TEST_ENABLED == 'true' }}
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
           CODEARTIFACT_AUTH_TOKEN: "${{ env.CODEARTIFACT_AUTH_TOKEN }}"
         run: |
-          yarn --frozen-lockfile --no-progress
+          npm ci
 
       - name: Coverage
+        if: ${{ env.TEST_ENABLED == 'true' }}
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
         run: |
-          ${COMMAND} || true
-
-      - name: Lint
-        if: ${{ env.LINT_COMMAND != '' }}
-        env:
-          NODE_OPTIONS: "--max_old_space_size=6144"
-        run: |
-          npm run lint:report
+          ${COMMAND}
 
       - name: Configure GCP Credentials
         run: |
