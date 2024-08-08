@@ -2,6 +2,10 @@ name: Sonar Scanner
 on:
   workflow_call:
     inputs:
+      image_tag:
+        default: 'latest'
+        required: false
+        type: string
       project_code:
         required: true
         type: string
@@ -28,15 +32,11 @@ on:
         default: ''
         required: false
         type: string
-      image_tag:
-        default: 'latest'
-        required: false
-        type: string
-      gcp_registry_phpunit:
+      phpunit_gcp_registry:
         default: ''
         required: false
         type: string
-      gcp_repository_phpunit:
+      phpunit_gcp_repository:
         default: ''
         required: false
         type: string
@@ -64,7 +64,7 @@ on:
         default: ''
         required: false
         type: string
-      runphp:
+      phpunit:
         required: false
         type: string
     secrets:
@@ -89,6 +89,7 @@ on:
       gh_pull_repo_pat:
         required: true
 env:
+  IMAGE_TAG: ${{ inputs.image_tag }}
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
   PROJECT_CODE: ${{ inputs.project_code }}
@@ -96,16 +97,15 @@ env:
   SONAR_TOKEN: ${{ secrets.sonar_token }}
   SONAR_EXCLUSIONS: ${{ inputs.sonar_exclusions }}
   SONAR_COVERAGE_EXCLUSIONS: ${{ inputs.sonar_coverage_exclusions }}
+  PHPUNIT: ${{ inputs.phpunit }}
   PHPUNIT_REDIS: ${{ inputs.phpunit_redis }}
   PHPUNIT_MONGODB: ${{ inputs.phpunit_mongodb }}
   PHPUNIT_RABBITMQ: ${{ inputs.phpunit_rabbitmq }}
   PHPUNIT_MYSQL: ${{ inputs.phpunit_mysql }}
   PHPUNIT_ELASTICSEARCH: ${{ inputs.phpunit_elasticsearch }}
   PHPUNIT_CONFIG_PATH: ${{ inputs.phpunit_config_path }}
-  GCP_REGISTRY_PHPUNIT: ${{ inputs.gcp_registry_phpunit }}
-  GCP_REPOSITORY_PHPUNIT: ${{ inputs.gcp_repository_phpunit }}
-  IMAGE_TAG: ${{ inputs.image_tag }}
-  RUNPHP: ${{ inputs.runphp }}
+  PHPUNIT_GCP_REGISTRY: ${{ inputs.phpunit_gcp_registry }}
+  PHPUNIT_GCP_REPOSITORY: ${{ inputs.phpunit_gcp_repository }}
 jobs:
   job:
     timeout-minutes: 30
@@ -145,7 +145,7 @@ jobs:
           gcloud auth configure-docker --quiet
 
       - name: PHPUnit Execution
-        if: ${{ env.RUNPHP == 'true' }}
+        if: ${{ env.PHPUNIT == 'true' }}
         run: |
           echo "[INFO] Create phpunit-test network"
           docker network create --driver bridge phpunit-test
@@ -196,14 +196,14 @@ jobs:
           fi
 
           echo "[INFO] Execute phpunit tests"
-          PHP_VERSION=$(docker run --rm  --entrypoint php "${GCP_REGISTRY_PHPUNIT}/${GCP_REPOSITORY_PHPUNIT}:${IMAGE_TAG}" -v | awk '/^PHP/ {print $2}' | awk -F. '{print $1"."$2}')
+          PHP_VERSION=$(docker run --rm  --entrypoint php "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" -v | awk '/^PHP/ {print $2}' | awk -F. '{print $1"."$2}')
           docker run -t --rm --workdir /app --network phpunit-test \
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/clover:/opt/clover" \
               -v "$(pwd)/config-management:/config-management" \
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key-public.pem:/app/storage/certificates/leabank-key-public.pem" } \
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
-              "${GCP_REGISTRY_PHPUNIT}/${GCP_REPOSITORY_PHPUNIT}:${IMAGE_TAG}" \
+              "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" \
               /bin/bash -e -c "echo [INFO] Install PHP testing tools && \
               apt-get update && apt-get -qq install -y php${PHP_VERSION}-xdebug php${PHP_VERSION}-mongodb && \
               echo [INFO] Copy config /config-management/${PHPUNIT_CONFIG_PATH} && \
