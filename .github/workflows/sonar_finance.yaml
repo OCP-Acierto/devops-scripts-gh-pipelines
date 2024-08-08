@@ -205,6 +205,9 @@ jobs:
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
               "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" \
               /bin/bash -e -c "echo [INFO] Install PHP testing tools && \
+              curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg \
+              DEB_URL="[arch=amd64 signed-by=/usr/share/keyrings/php-sury.gpg]" \
+              echo "deb ${DEB_URL} https://packages.sury.org/php/ bullseye main" > /etc/apt/sources.list.d/php.list \
               apt-get update && apt-get -qq install -y php${PHP_VERSION}-xdebug php${PHP_VERSION}-mongodb && \
               echo [INFO] Copy config /config-management/${PHPUNIT_CONFIG_PATH} && \
               cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing && \
