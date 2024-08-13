@@ -221,6 +221,9 @@ jobs:
             echo "[INFO] Getting Deployment Status"
             kubectl get pods | grep -i ${PROJECT_CODE}
 
+            echo "[INFO] Check if there are PODs no Running..."
+            [[ $(kubectl get pods | grep -i ${PROJECT_CODE} | grep -v 'Running' -c) -ge 1 ]] && exit 1
+
             echo "[INFO] Getting Deployment Events"
             kubectl get events | grep -i ${PROJECT_CODE} | tail -n10 || true
           fi
