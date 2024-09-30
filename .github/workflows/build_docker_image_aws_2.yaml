@@ -125,6 +125,11 @@ jobs:
       
       - name: Build & tag image to AWS ECR
         run: |
+          PROJECT_VERSION="$(cat package.json | jq .version -r)"
+          if [ -n "$PROJECT_VERSION" ]; then
+            echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV
+          fi
+
           CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
           GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}"
           CHROMATIC_PROJECT_TOKEN_OCP_COMPONENT_ESSENCE_ACIERTO="${{ secrets.chromatic_project_token_ocp_component_essence_acierto }}"
@@ -142,18 +147,22 @@ jobs:
             ${CODEARTIFACT_AUTH_TOKEN:+ --build-arg "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}" } \
             ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
             ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
             ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
             ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest" } \
+            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
             --file ${DOCKER_FILE} ${CONTEXT}.
 
       - name: Push image to AWS ECR PROD
         if: ${{ env.ACCOUNT_ID_PROD != '' }}
         run: |
-          PROJECT_VERSION="$(cat package.json | jq .version -r)"
+          PROJECT_VERSION="${{ env.PROJECT_VERSION }}"
           if [ -n "$PROJECT_VERSION" ]; then
             docker push ${ACCOUNT_ID_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${PROJECT_VERSION}
           fi
@@ -175,6 +184,10 @@ jobs:
       - name: Push image to AWS ECR LAB
         if: ${{ env.ACCOUNT_ID_LAB != '' }}
         run: |
+          PROJECT_VERSION="${{ env.PROJECT_VERSION }}"
+          if [ -n "$PROJECT_VERSION" ]; then
+            docker push ${ACCOUNT_ID_LAB}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${PROJECT_VERSION}
+          fi
           docker push ${ACCOUNT_ID_LAB}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${ACCOUNT_ID_LAB}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
 
@@ -193,6 +206,10 @@ jobs:
       - name: Push image to AWS ECR STAGE
         if: ${{ env.ACCOUNT_ID_STAGE != '' }}
         run: |
+          PROJECT_VERSION="${{ env.PROJECT_VERSION }}"
+          if [ -n "$PROJECT_VERSION" ]; then
+            docker push ${ACCOUNT_ID_STAGE}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${PROJECT_VERSION}
+          fi
           docker push ${ACCOUNT_ID_STAGE}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${ACCOUNT_ID_STAGE}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
 
@@ -211,7 +228,9 @@ jobs:
       - name: Push image to AWS ECR NON-PROD
         if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
         run: |
+          PROJECT_VERSION="${{ env.PROJECT_VERSION }}"
+          if [ -n "$PROJECT_VERSION" ]; then
+            docker push ${ACCOUNT_ID_NON_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${PROJECT_VERSION}
+          fi
           docker push ${ACCOUNT_ID_NON_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:${IMAGE_TAG}
           docker push ${ACCOUNT_ID_NON_PROD}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_REPOSITORY}:latest
-          
-          
