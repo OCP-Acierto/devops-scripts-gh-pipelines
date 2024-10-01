@@ -133,5 +133,5 @@ jobs:
                       -Dsonar.sourceEncoding=UTF-8 \
                       -Dsonar.coverage.exclusions=**/*spec.ts,**/**/*spec.ts,**/*mock.ts,**/__mocks__/*,${SONAR_COVERAGE_EXCLUSIONS} \
                       -Dsonar.exclusions=public/**,${SONAR_EXCLUSIONS} \
-                      -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info,/opt/clover/clover.xml
+                      -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info,/opt/clover/clover.xml,./coverage/clover.xml
                   "
