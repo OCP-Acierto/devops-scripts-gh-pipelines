@@ -20,6 +20,10 @@ on:
         default: ''
         required: false
         type: string
+      pnpm_version:
+        default: ''
+        required: true
+        type: string
     secrets:
       gcp_cdm_registry_sa_credentials:
         required: true
@@ -39,6 +43,7 @@ env:
   PROJECT_CODE: ${{ inputs.project_code }}
   SONAR_URL: ${{ secrets.sonar_url }}
   SONAR_TOKEN: ${{ secrets.sonar_token }}
+  PNPM_VERSION: ${{ secrets.pnpm_version }}
 jobs:
   job:
     timeout-minutes: 30
