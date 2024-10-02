@@ -88,7 +88,8 @@ jobs:
           NODE_OPTIONS: "--max_old_space_size=6144"
           CODEARTIFACT_AUTH_TOKEN: "${{ env.CODEARTIFACT_AUTH_TOKEN }}"
         run: |
-          pnpm i --frozen-lockfile	
+          npm install -g pnpm@${PNPM_VERSION} \
+          && pnpm i --frozen-lockfile
 
       - name: Coverage
         if: ${{ env.TEST_ENABLED == 'true' }}
