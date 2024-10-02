@@ -12,14 +12,6 @@ on:
       gcp_repository:
         required: true
         type: string
-      command:
-        default: ''
-        required: true
-        type: string
-      test_enabled:
-        default: ''
-        required: true
-        type: string
       sonar_exclusions:
         default: ''
         required: false
@@ -42,8 +34,6 @@ on:
 env:
   GCP_REGISTRY: ${{ inputs.gcp_registry }}
   GCP_REPOSITORY: ${{ inputs.gcp_repository }}
-  COMMAND: ${{ inputs.command }}
-  TEST_ENABLED: ${{ inputs.test_enabled }}
   SONAR_EXCLUSIONS: ${{ inputs.sonar_exclusions }}
   SONAR_COVERAGE_EXCLUSIONS: ${{ inputs.sonar_coverage_exclusions }}
   PROJECT_CODE: ${{ inputs.project_code }}
@@ -83,7 +73,6 @@ jobs:
           node-version-file: 'package.json'
 
       - name: NPM Install
-        if: ${{ env.TEST_ENABLED == 'true' }}
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
           CODEARTIFACT_AUTH_TOKEN: "${{ env.CODEARTIFACT_AUTH_TOKEN }}"
@@ -92,11 +81,10 @@ jobs:
           && pnpm i --frozen-lockfile
 
       - name: Coverage
-        if: ${{ env.TEST_ENABLED == 'true' }}
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
         run: |
-          ${COMMAND}
+          pnpm test:coverage --silent --bail=1
 
       - name: Configure GCP Credentials
         run: |
