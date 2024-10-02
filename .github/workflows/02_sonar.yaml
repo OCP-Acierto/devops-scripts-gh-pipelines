@@ -1,0 +1,20 @@
+name: 02.- Run Sonar Scanner (On Push)
+on:
+  push:
+    branches:
+      - master
+jobs:
+  scann:
+    name: Sonar Scanner
+    uses: OCP-Acierto/devops-scripts-gh-pipelines/.github/workflows/sonar_devops.yaml@master
+    with:
+      project_code: ${{ github.event.repository.name }}
+      gcp_registry: eu.gcr.io/internal-cdm/images/prod
+      gcp_repository: sonar-scanner
+      sonar_exclusions: '*/**/__TEST__/**,**/entities/**,**/database/**'
+      sonar_coverage_exclusions: '**/main.ts,**/*.module.ts,**/**/*.module.ts,**/config/*.ts,**/index.ts,*/**/__TEST__/**,coverage/**,**/utils/logger/*.ts,**/common/*.ts'
+    secrets:
+      sonar_url: ${{ secrets.SONAR_HOST_URL  }}
+      sonar_token: ${{ secrets.SONAR_TOKEN }}
+      gcp_cdm_registry_sa_credentials: ${{ secrets.GCP_CDM_REGISTRY_SA_CREDENTIALS }}
+      gh_npm_registry_pat: ${{ secrets.GH_NPM_REGISTRY_PAT }}

@@ -88,7 +88,7 @@ jobs:
           NODE_OPTIONS: "--max_old_space_size=6144"
           CODEARTIFACT_AUTH_TOKEN: "${{ env.CODEARTIFACT_AUTH_TOKEN }}"
         run: |
-          npm ci
+          pnpm i --frozen-lockfile	
 
       - name: Coverage
         if: ${{ env.TEST_ENABLED == 'true' }}
@@ -133,7 +133,7 @@ jobs:
                       -Dsonar.sourceEncoding=UTF-8 \
                       -Dsonar.coverage.exclusions=**/*spec.ts,**/**/*spec.ts,**/*mock.ts,**/__mocks__/*,${SONAR_COVERAGE_EXCLUSIONS} \
                       -Dsonar.exclusions=public/**,${SONAR_EXCLUSIONS} \
-                      -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info,/opt/clover/clover.xml,./coverage/clover.xml
+                      -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info,/opt/clover/clover.xml
                   "
 
 ##      - name: Sonar Qualitygate status
