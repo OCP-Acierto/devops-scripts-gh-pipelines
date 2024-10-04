@@ -150,16 +150,16 @@ jobs:
             ${CODEARTIFACT_AUTH_TOKEN:+ --build-arg "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}" } \
             ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest" } \
-            ${AWS_REGISTRY_PROD:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
+            ${PROJECT_VERSION:+       --tag "${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
             ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest" } \
-            ${AWS_REGISTRY_NON_PROD:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
+            ${PROJECT_VERSION:+   --tag "${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
             ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:latest" } \
-            ${AWS_REGISTRY_STAGE:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
+            ${PROJECT_VERSION:+      --tag "${AWS_REGISTRY_STAGE}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
             ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}" } \
             ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest" } \
-            ${AWS_REGISTRY_LAB:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
+            ${PROJECT_VERSION:+      --tag "${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${PROJECT_VERSION}" } \
             --file ${DOCKER_FILE} ${CONTEXT}.
 
       - name: Push image to AWS ECR PROD
