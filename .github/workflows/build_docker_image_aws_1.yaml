@@ -125,9 +125,12 @@ jobs:
       
       - name: Build & tag image to AWS ECR
         run: |
-          PROJECT_VERSION="$(cat package.json | jq .version -r)"
-          if [ -n "$PROJECT_VERSION" ]; then
-            echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV
+          
+          if [ -f package.json ]; then
+            PROJECT_VERSION="$(cat package.json | jq .version -r)"
+            if [ -n "$PROJECT_VERSION" ]; then
+              echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV
+            fi
           fi
 
           CODEARTIFACT_AUTH_TOKEN="${{ env.CODEARTIFACT_AUTH_TOKEN }}"
