@@ -134,6 +134,7 @@ jobs:
               echo "PROJECT_VERSION=0.0.0" >> $GITHUB_ENV
             fi
           else
+            PROJECT_VERSION="${IMAGE_TAG}"
             echo "PROJECT_VERSION=${IMAGE_TAG}" >> $GITHUB_ENV
           fi
 
