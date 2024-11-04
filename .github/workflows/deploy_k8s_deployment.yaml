@@ -99,10 +99,6 @@ jobs:
           kubectl apply -f ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/autoscaling.yaml
           kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/deployment.yaml)
 
-          if [ -f ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/cron-global.yaml ];then
-            kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/cron-global.yaml)
-          fi
-
           if [ ${PROJECT_CODE} == 'credimarket' ];then
             kubectl apply -f <( sed "s/__VERSION__/${IMAGE_TAG}/" ./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/cron-scoring-result-email-api.yaml)
           fi
