@@ -77,13 +77,13 @@ jobs:
           docker rm "${CONTAINER_ID}"
 
       - name: Configure GCP Credentials only for production-cdm
-        uses: google-github-actions/auth@v1.1.1
+        uses: google-github-actions/auth@v2.1.7
         if: ${{ env.GCP_CDN_PROJECT == 'production-cdm' }}
         with:
           credentials_json: ${{ secrets.gcp_storage_sa_credentials }}
 
       - name: Set up Cloud SDK only for production-cdm
-        uses: google-github-actions/setup-gcloud@v1.1.1
+        uses: google-github-actions/setup-gcloud@v2.1.2
         if: ${{ env.GCP_CDN_PROJECT == 'production-cdm' }}
         with:
           project_id: production-cdm
