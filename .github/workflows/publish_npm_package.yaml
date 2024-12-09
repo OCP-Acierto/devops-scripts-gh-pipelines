@@ -25,6 +25,9 @@ on:
         default: ''
         required: false
         type: string
+      ocp_packages_actions_role:
+        required: false
+        type: string
     secrets:
       gh_npm_registry_pat:
         required: false
@@ -39,6 +42,7 @@ env:
   HAVE_SUBMODULES: ${{ inputs.have_submodules }}
   AWS_REGION: ${{ inputs.aws_region }}
   ACCOUNT_ID_PROD: ${{ inputs.account_id_prod }}
+  OCP_PACKAGES_ACTIONS_ROLE: ${{ inputs.ocp_packages_actions_role }}
 permissions:
       id-token: write
       contents: write
