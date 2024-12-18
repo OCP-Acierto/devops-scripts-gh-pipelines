@@ -73,36 +73,68 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials via role assumption LAB
+      - name: Configure AWS credentials via role assumption PROD
         uses: aws-actions/configure-aws-credentials@v4
-        if: ${{ env.ACCOUNT_ID_LAB != '' }}
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
         with:
-          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_LAB }}:role/gha_oidc_assume_role"
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_PROD }}:role/gha_oidc_assume_role"
           role-session-name: GithubActions
           aws-region: eu-west-1
 
-      - name: Login to Amazon ECR LAB
+      - name: Login to Amazon ECR PROD
         uses: aws-actions/amazon-ecr-login@v2
-        if: ${{ env.ACCOUNT_ID_LAB != '' }}
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
 
-      - name: Build & tag image to AWS ECR LAB
+      - name: Build & tag image to AWS ECR PROD
         run: |
-          echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_LAB}"
+          echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_PROD}"
           docker build \
             ${DOCKER_BUILD_ARGS} \
             --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
-            --build-arg AWS_REGISTRY=${AWS_REGISTRY_LAB} \
-            --tag ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest \
+            --build-arg AWS_REGISTRY=${AWS_REGISTRY_PROD} \
+            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
+            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
-        if: ${{ env.ACCOUNT_ID_LAB != '' }}
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
 
-      - name: Push image to AWS ECR LAB
+      - name: Push image to AWS ECR PROD
         run: |
-          echo "[INFO] Pushing to LAB ${AWS_REGISTRY_LAB}"
-          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest
-        if: ${{ env.ACCOUNT_ID_LAB != '' }}
+            docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
+            docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
+        if: ${{ env.ACCOUNT_ID_PROD != '' }}
+
+
+      - name: Configure AWS credentials via role assumption NON-PROD
+        uses: aws-actions/configure-aws-credentials@v4
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_NON_PROD }}:role/gha_oidc_assume_role"
+          role-session-name: GithubActions
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR NON-PROD
+        uses: aws-actions/amazon-ecr-login@v2
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+
+      - name: Build & tag image to AWS ECR NON-PROD
+        run: |
+          echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_NON_PROD}"
+          docker build \
+            ${DOCKER_BUILD_ARGS} \
+            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
+            --build-arg AWS_REGISTRY=${AWS_REGISTRY_NON_PROD} \
+            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
+            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
+            --file ${DOCKER_FILE} .
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+
+      - name: Push image to AWS ECR NON-PROD
+        run: |
+          echo "[INFO] Pushing to NON-PROD ${AWS_REGISTRY_NON_PROD}"
+          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+
 
       - name: Configure AWS credentials via role assumption STAGE
         uses: aws-actions/configure-aws-credentials@v4
@@ -136,63 +168,33 @@ jobs:
         if: ${{ env.ACCOUNT_ID_STAGE != '' }}
 
 
-      - name: Configure AWS credentials via role assumption Non-prod
+      - name: Configure AWS credentials via role assumption LAB
         uses: aws-actions/configure-aws-credentials@v4
-        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
         with:
-          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_NON_PROD }}:role/gha_oidc_assume_role"
+          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_LAB }}:role/gha_oidc_assume_role"
           role-session-name: GithubActions
           aws-region: eu-west-1
 
-      - name: Login to Amazon ECR NON-PROD
+      - name: Login to Amazon ECR LAB
         uses: aws-actions/amazon-ecr-login@v2
-        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
 
-      - name: Build & tag image to AWS ECR NON-PROD
+      - name: Build & tag image to AWS ECR LAB
         run: |
-          echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_NON_PROD}"
+          echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_LAB}"
           docker build \
             ${DOCKER_BUILD_ARGS} \
             --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
-            --build-arg AWS_REGISTRY=${AWS_REGISTRY_NON_PROD} \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest \
+            --build-arg AWS_REGISTRY=${AWS_REGISTRY_LAB} \
+            --tag ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG} \
+            --tag ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest \
             --file ${DOCKER_FILE} .
-        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
 
-      - name: Push image to AWS ECR NON-PROD
+      - name: Push image to AWS ECR LAB
         run: |
-          echo "[INFO] Pushing to NON-PROD ${AWS_REGISTRY_NON_PROD}"
-          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
-          docker push ${AWS_REGISTRY_NON_PROD}/${AWS_REPOSITORY}:latest
-        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
-
-      - name: Configure AWS credentials via role assumption Prod
-        uses: aws-actions/configure-aws-credentials@v4
-        if: ${{ env.ACCOUNT_ID_PROD != '' }}
-        with:
-          role-to-assume: "arn:aws:iam::${{ env.ACCOUNT_ID_PROD }}:role/gha_oidc_assume_role"
-          role-session-name: GithubActions
-          aws-region: eu-west-1
-
-      - name: Login to Amazon ECR PROD
-        uses: aws-actions/amazon-ecr-login@v2
-        if: ${{ env.ACCOUNT_ID_PROD != '' }}
-
-      - name: Build & tag image to AWS ECR PROD
-        run: |
-          echo "[INFO] Adding AWS_REGISTRY=${AWS_REGISTRY_PROD}"
-          docker build \
-            ${DOCKER_BUILD_ARGS} \
-            --build-arg GH_NPM_REGISTRY_PAT="${{ secrets.gh_npm_registry_pat }}" \
-            --build-arg AWS_REGISTRY=${AWS_REGISTRY_PROD} \
-            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG} \
-            --tag ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest \
-            --file ${DOCKER_FILE} .
-        if: ${{ env.ACCOUNT_ID_PROD != '' }}
-
-      - name: Push image to AWS ECR PROD
-        run: |
-            docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:${IMAGE_TAG}
-            docker push ${AWS_REGISTRY_PROD}/${AWS_REPOSITORY}:latest
-        if: ${{ env.ACCOUNT_ID_PROD != '' }}
+          echo "[INFO] Pushing to LAB ${AWS_REGISTRY_LAB}"
+          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:${IMAGE_TAG}
+          docker push ${AWS_REGISTRY_LAB}/${AWS_REPOSITORY}:latest
+        if: ${{ env.ACCOUNT_ID_LAB != '' }}
