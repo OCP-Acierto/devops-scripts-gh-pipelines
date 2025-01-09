@@ -44,6 +44,7 @@ env:
   SONAR_URL: ${{ secrets.sonar_url }}
   SONAR_TOKEN: ${{ secrets.sonar_token }}
   PNPM_VERSION: ${{ secrets.pnpm_version }}
+  TZ: CET
 jobs:
   job:
     timeout-minutes: 30
@@ -88,7 +89,6 @@ jobs:
       - name: Coverage
         env:
           NODE_OPTIONS: "--max_old_space_size=6144"
-          TZ: 'Europe/Madrid'
         run: |
           pnpm test:coverage --silent --bail=1
 
