@@ -128,7 +128,7 @@ jobs:
                       -Dsonar.sourceEncoding=UTF-8 \
                       -Dsonar.coverage.exclusions=**/*spec.ts,**/**/*spec.ts,**/*mock.ts,**/__mocks__/*,${SONAR_COVERAGE_EXCLUSIONS} \
                       -Dsonar.exclusions=public/**,${SONAR_EXCLUSIONS} \
-                      -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info,/opt/clover/clover.xml
+                      -Dsonar.javascript.lcov.reportPaths=./packages/insurance-web-funnel-cars/coverage/lcov.info,./packages/insurance-web-funnel-life/coverage/lcov.info,./packages/insurance-web-funnel-loans/coverage/lcov.info,/opt/clover/clover.xml
                   "
 
 ##      - name: Sonar Qualitygate status
