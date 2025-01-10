@@ -140,7 +140,7 @@ jobs:
         run: |
           QUALITY_STATUS=$(curl -s -u ${SONAR_TOKEN}: \
             https://sonar.acierto.com/api/qualitygates/project_status?projectKey=${PROJECT_CODE} |
-            jq .projectStatus.status)
+            jq .projectStatus.status -r)
           
           echo "QualityGate status is ${QUALITY_STATUS}"
           if [ "${QUALITY_STATUS}" == "ERROR" ]; then
