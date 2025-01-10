@@ -131,18 +131,18 @@ jobs:
                       -Dsonar.javascript.lcov.reportPaths=./packages/insurance-web-funnel-cars/coverage/lcov.info,./packages/insurance-web-funnel-life/coverage/lcov.info,./packages/insurance-web-funnel-loans/coverage/lcov.info,/opt/clover/clover.xml
                   "
 
-##      - name: Sonar Qualitygate status
-##        run: |
-##          QUALITY_STATUS=$(curl -s -u ${SONAR_TOKEN}: \
-##            https://sonar.acierto.com/api/qualitygates/project_status?projectKey=ocp-api-gdpr |
-##            jq .projectStatus.status)
-##          
-##          if [ "${QUALITY_STATUS}" == "ERROR" ]; then
-##            echo "QualityGate statues is ${QUALITY_STATUS}"
-##            echo "Exit Pipeline until is solved"
-##            exit 1
-##          else
-##            echo "QualityGate statues is ${QUALITY_STATUS}"
-##            echo "Continue Pipeline..."
-##            exit 0
-##          fi
+      - name: Sonar Qualitygate status
+        run: |
+          QUALITY_STATUS=$(curl -s -u ${SONAR_TOKEN}: \
+            https://sonar.acierto.com/api/qualitygates/project_status?projectKey=ocp-api-gdpr |
+            jq .projectStatus.status)
+          
+          if [ "${QUALITY_STATUS}" == "ERROR" ]; then
+            echo "QualityGate statues is ${QUALITY_STATUS}"
+            echo "Exit Pipeline until is solved"
+            exit 1
+          else
+            echo "QualityGate statues is ${QUALITY_STATUS}"
+            echo "Continue Pipeline..."
+            exit 0
+          fi
