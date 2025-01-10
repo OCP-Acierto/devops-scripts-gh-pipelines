@@ -139,15 +139,15 @@ jobs:
       - name: Sonar Qualitygate status
         run: |
           QUALITY_STATUS=$(curl -s -u ${SONAR_TOKEN}: \
-            https://sonar.acierto.com/api/qualitygates/project_status?projectKey=ocp-api-gdpr |
+            https://sonar.acierto.com/api/qualitygates/project_status?projectKey=${PROJECT_CODE} |
             jq .projectStatus.status)
           
           if [ "${QUALITY_STATUS}" == "ERROR" ]; then
-            echo "QualityGate statues is ${QUALITY_STATUS}"
+            echo "QualityGate status is ${QUALITY_STATUS}"
             echo "Exit Pipeline until is solved"
             exit 1
           else
-            echo "QualityGate statues is ${QUALITY_STATUS}"
+            echo "QualityGate status is ${QUALITY_STATUS}"
             echo "Continue Pipeline..."
             exit 0
           fi
