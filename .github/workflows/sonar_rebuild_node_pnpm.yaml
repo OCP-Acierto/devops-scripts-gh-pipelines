@@ -137,12 +137,11 @@ jobs:
             https://sonar.acierto.com/api/qualitygates/project_status?projectKey=${PROJECT_CODE} |
             jq .projectStatus.status)
           
+          echo "QualityGate status is ${QUALITY_STATUS}"
           if [ "${QUALITY_STATUS}" == "ERROR" ]; then
-            echo "QualityGate status is ${QUALITY_STATUS}"
             echo "Exit Pipeline until is solved"
             exit 1
           else
-            echo "QualityGate status is ${QUALITY_STATUS}"
             echo "Continue Pipeline..."
             exit 0
           fi
