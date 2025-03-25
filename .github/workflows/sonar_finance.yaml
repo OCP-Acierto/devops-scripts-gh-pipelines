@@ -208,14 +208,28 @@ jobs:
 
           echo "[INFO] Execute phpunit tests"
           PHP_VERSION=$(docker run --rm  --entrypoint php "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" -v | awk '/^PHP/ {print $2}' | awk -F. '{print $1"."$2}')
-          docker run -t --rm --workdir /app --network phpunit-test \
+          echo "[INFO] Detected PHP version: ${PHP_VERSION}"
+
+          echo "[INFO] Starting PHPUnit container"
+          docker run -tid --name phpunit-container --workdir /app --network phpunit-test \
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/clover:/opt/clover" \
               -v "$(pwd)/config-management:/config-management" \
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key-public.pem:/app/storage/certificates/leabank-key-public.pem" } \
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
               "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" \
-              /bin/bash -e -c "echo [INFO] Delete old PHP source.list && \
+              tail -f /dev/null || { echo "[ERROR] Failed to start PHPUnit container"; exit 1; }
+
+          echo "[INFO] Verifying PHPUnit container is running"
+          timeout 30s bash -c 'until docker exec phpunit-container php -v > /dev/null 2>&1; do sleep 1; done' || { 
+              echo "[ERROR] PHPUnit container failed to start"; 
+              docker logs phpunit-container; 
+              docker stop phpunit-container; 
+              exit 1; 
+          }
+
+          echo "[INFO] Running PHPUnit tests"
+          docker exec -t phpunit-container /bin/bash -e -c "echo [INFO] Delete old PHP source.list && \
               rm -vf /etc/apt/sources.list.d/php.list && \
               curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg && \
               echo deb '[arch=amd64 signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list && \
@@ -227,8 +241,15 @@ jobs:
                       --configuration /app/phpunit.xml \
                       --log-junit /opt/jreport/jreport.xml \
                       --coverage-clover /opt/clover/clover.xml \
-                      --coverage-text
-                  "
+                      --coverage-text" || { 
+              echo "[ERROR] PHPUnit tests failed"; 
+              docker logs phpunit-container; 
+              docker stop phpunit-container; 
+              exit 1; 
+          }
+
+          echo "[INFO] Stopping PHPUnit container"
+          docker stop phpunit-container
 
       - name: Sonar Scanner Execution
         run: |
