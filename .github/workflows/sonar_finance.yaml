@@ -170,10 +170,16 @@ jobs:
 
           if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
             echo "[INFO] Start rabbitmq container"
-            docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.rabbitmq_user }} -e RABBITMQ_DEFAULT_PASS=${{ secrets.rabbitmq_pass }} \
-            ${PHPUNIT_RABBITMQ}
+            docker run -tid --rm --name rabbitmq --network phpunit-test \
+              -e RABBITMQ_DEFAULT_USER=${{ secrets.rabbitmq_user }} \
+              -e RABBITMQ_DEFAULT_PASS=${{ secrets.rabbitmq_pass }} \
+              ${PHPUNIT_RABBITMQ}
             echo "[INFO] Waiting for RabbitMQ to be ready..."
-            timeout 30s bash -c 'until docker exec rabbitmq rabbitmqctl status > /dev/null 2>&1; do sleep 1; done' || { echo "[ERROR] RabbitMQ failed to start"; exit 1; }
+            timeout 30s bash -c 'until docker logs rabbitmq 2>&1 | grep -q "Server startup complete"; do sleep 1; done' || { 
+              echo "[ERROR] RabbitMQ failed to start. Logs:"; 
+              docker logs rabbitmq; 
+              exit 1; 
+            }
           fi
 
           if [ ! -z "${PHPUNIT_MYSQL}" ]; then
