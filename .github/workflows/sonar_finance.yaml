@@ -205,7 +205,7 @@ jobs:
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
               "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" \
               /bin/bash -e -c "echo [INFO] Delete old PHP source.list && \
-              rm -vf /etc/apt/sources.list.d/php.list && \
+              rm -vf /etc/apt/sources.list.d/php.list || true && \
               curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg && \
               echo deb '[arch=amd64 signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list && \
               echo [INFO] Install PHP testing tools && \
