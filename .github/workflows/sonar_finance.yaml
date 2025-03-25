@@ -242,16 +242,22 @@ jobs:
               echo '[DEBUG] Checking composer installation';
               composer --version || { echo '[ERROR] Composer installation failed'; exit 1; }
 
-              echo '[DEBUG] Removing old PHP source.list';
-              rm -vf /etc/apt/sources.list.d/php.list;
+              echo '[DEBUG] Configuring PHP repository';
+              # Eliminar repositorios antiguos
+              rm -vf /etc/apt/sources.list.d/php.list || echo '[INFO] No previous PHP source.list found';
 
-              echo '[DEBUG] Adding new PHP source.list';
+              # Crear el directorio si no existe
               mkdir -p /etc/apt/sources.list.d;
+
+              # Descargar y agregar la clave GPG
               curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { echo '[ERROR] Failed to download PHP GPG key'; exit 1; }
+
+              # Agregar el repositorio de PHP
               echo 'deb [signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list || { echo '[ERROR] Failed to add PHP source.list'; exit 1; }
 
-              echo '[DEBUG] Running apt-get update with timeout';
-              timeout 120s apt-get update --allow-releaseinfo-change || { echo '[ERROR] apt-get update failed'; exit 1; }
+              # Actualizar los repositorios
+              echo '[DEBUG] Running apt-get update';
+              apt-get update --allow-releaseinfo-change || { echo '[ERROR] apt-get update failed'; exit 1; }
 
               echo '[DEBUG] Installing PHP testing tools';
               apt-get -qq install -y php${PHP_VERSION}-xdebug php${PHP_VERSION}-mongodb || { echo '[ERROR] Failed to install PHP testing tools'; exit 1; }
