@@ -245,12 +245,10 @@ jobs:
               echo '[DEBUG] Removing old PHP source.list';
               rm -vf /etc/apt/sources.list.d/php.list;
 
-              echo '[DEBUG] Running apt-get update with timeout';
-              timeout 120s apt-get update --allow-releaseinfo-change || { echo '[ERROR] apt-get update failed'; exit 1; }
-
               echo '[DEBUG] Adding new PHP source.list';
-              curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { echo '[ERROR] Failed to download PHP GPG key'; exit 1; }
-              echo deb '[arch=amd64 signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list;
+              mkdir -p /etc/apt/sources.list.d;
+              curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { echo '[ERROR] Failed to download PHP GPG key'; exit 1; }
+              echo 'deb [signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list || { echo '[ERROR] Failed to add PHP source.list'; exit 1; }
 
               echo '[DEBUG] Running apt-get update with timeout';
               timeout 120s apt-get update --allow-releaseinfo-change || { echo '[ERROR] apt-get update failed'; exit 1; }
