@@ -156,30 +156,40 @@ jobs:
               -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
               -e MONGO_INITDB_ROOT_PASSWORD=secret  \
               ${PHPUNIT_MONGODB}
+            echo "[INFO] Waiting for MongoDB to be ready..."
+            timeout 30s bash -c 'until docker exec mongodb mongo --eval "db.stats()" > /dev/null 2>&1; do sleep 1; done' || { echo "[ERROR] MongoDB failed to start"; exit 1; }
           fi
 
           if [ ! -z "${PHPUNIT_REDIS}" ]; then
             echo "[INFO] Start redis container"
             docker run -tid --rm --name redis --network phpunit-test \
             ${PHPUNIT_REDIS}
+            echo "[INFO] Waiting for Redis to be ready..."
+            timeout 30s bash -c 'until docker exec redis redis-cli ping | grep -q PONG; do sleep 1; done' || { echo "[ERROR] Redis failed to start"; exit 1; }
           fi
 
           if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
             echo "[INFO] Start rabbitmq container"
             docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.rabbitmq_user }} -e RABBITMQ_DEFAULT_PASS=${{ secrets.rabbitmq_pass }} \
             ${PHPUNIT_RABBITMQ}
+            echo "[INFO] Waiting for RabbitMQ to be ready..."
+            timeout 30s bash -c 'until docker exec rabbitmq rabbitmqctl status > /dev/null 2>&1; do sleep 1; done' || { echo "[ERROR] RabbitMQ failed to start"; exit 1; }
           fi
 
           if [ ! -z "${PHPUNIT_MYSQL}" ]; then
             echo "[INFO] Start mysql container"
             docker run -tid --rm --name mysql --network phpunit-test -e MYSQL_ROOT_PASSWORD=${{ secrets.mysql_pass }} \
             ${PHPUNIT_MYSQL}
+            echo "[INFO] Waiting for MySQL to be ready..."
+            timeout 30s bash -c 'until docker exec mysql mysqladmin ping -h "127.0.0.1" --silent; do sleep 1; done' || { echo "[ERROR] MySQL failed to start"; exit 1; }
           fi
 
           if [ ! -z "${PHPUNIT_ELASTICSEARCH}" ]; then
             echo "[INFO] Start elasticsearch container"
             docker run -tid --rm --name elasticsearch --network phpunit-test -e "discovery.type=single-node" \
             ${PHPUNIT_ELASTICSEARCH}
+            echo "[INFO] Waiting for Elasticsearch to be ready..."
+            timeout 30s bash -c 'until docker exec elasticsearch curl -s http://localhost:9200/_cluster/health | grep -q "green"; do sleep 1; done' || { echo "[ERROR] Elasticsearch failed to start"; exit 1; }
           fi
 
           LEABANK_MOUNT_FILE=""
@@ -197,7 +207,7 @@ jobs:
 
           echo "[INFO] Execute phpunit tests"
           PHP_VERSION=$(docker run --rm  --entrypoint php "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" -v | awk '/^PHP/ {print $2}' | awk -F. '{print $1"."$2}')
-          docker run -t --rm --workdir /app --network phpunit-test \
+          timeout 30m docker run -t --rm --workdir /app --network phpunit-test \
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/clover:/opt/clover" \
               -v "$(pwd)/config-management:/config-management" \
@@ -217,7 +227,7 @@ jobs:
                       --log-junit /opt/jreport/jreport.xml \
                       --coverage-clover /opt/clover/clover.xml \
                       --coverage-text
-                  "
+                  " || { echo "[ERROR] PHPUnit tests failed or timed out"; exit 1; }
 
       - name: Sonar Scanner Execution
         run: |
