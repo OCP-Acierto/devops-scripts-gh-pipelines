@@ -228,6 +228,9 @@ jobs:
               exit 1; 
           }
 
+          echo '[DEBUG] Verifying network connectivity';
+          curl -s https://google.com > /dev/null || { echo '[ERROR] No network connectivity'; exit 1; }
+
           echo "[INFO] Running PHPUnit tests"
           docker exec -t phpunit-container /bin/bash -e -c "
               echo '[DEBUG] Checking PHP version';
@@ -243,11 +246,11 @@ jobs:
               rm -vf /etc/apt/sources.list.d/php.list;
 
               echo '[DEBUG] Adding new PHP source.list';
-              curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg;
+              curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { echo '[ERROR] Failed to download PHP GPG key'; exit 1; }
               echo deb '[arch=amd64 signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list;
 
-              echo '[DEBUG] Running apt-get update';
-              apt-get update || { echo '[ERROR] apt-get update failed'; exit 1; }
+              echo '[DEBUG] Running apt-get update with timeout';
+              timeout 120s apt-get update --allow-releaseinfo-change || { echo '[ERROR] apt-get update failed'; exit 1; }
 
               echo '[DEBUG] Installing PHP testing tools';
               apt-get -qq install -y php${PHP_VERSION}-xdebug php${PHP_VERSION}-mongodb || { echo '[ERROR] Failed to install PHP testing tools'; exit 1; }
