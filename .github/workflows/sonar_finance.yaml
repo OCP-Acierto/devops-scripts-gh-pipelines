@@ -233,8 +233,11 @@ jobs:
               echo '[DEBUG] Checking PHP version';
               php -v;
 
+              echo '[DEBUG] Installing Composer';
+              curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer || { echo '[ERROR] Failed to install Composer'; exit 1; }
+
               echo '[DEBUG] Checking composer installation';
-              composer --version || echo '[WARNING] Composer not installed';
+              composer --version || { echo '[ERROR] Composer installation failed'; exit 1; }
 
               echo '[DEBUG] Removing old PHP source.list';
               rm -vf /etc/apt/sources.list.d/php.list;
