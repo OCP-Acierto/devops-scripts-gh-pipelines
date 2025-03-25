@@ -123,6 +123,7 @@ jobs:
 
       - name: Configure GCP Credentials
         run: |
+          set -e
           # IMPORTANT: SECRET MUST BE IN BASE64
           touch gcp_cdm_registry_sa_credentials.json
           echo "${{ secrets.gcp_cdm_registry_sa_credentials }}" | base64 -d > gcp_cdm_registry_sa_credentials.json
@@ -142,30 +143,28 @@ jobs:
 
       - name: Configure Docker Credentials
         run: |
+          set -e
           gcloud auth configure-docker --quiet
 
       - name: PHPUnit Execution
         if: ${{ env.PHPUNIT == 'true' }}
         run: |
+          set -e
           echo "[INFO] Create phpunit-test network"
-          docker network create --driver bridge phpunit-test
+          docker network create --driver bridge phpunit-test || echo "[INFO] Network already exists"
 
           if [ ! -z "${PHPUNIT_MONGODB}" ]; then
             echo "[INFO] Start mongodb container"
             docker run -tid --rm --name mongodb --network phpunit-test \
               -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
               -e MONGO_INITDB_ROOT_PASSWORD=secret  \
-              ${PHPUNIT_MONGODB}
-            echo "[INFO] Waiting for MongoDB to be ready..."
-            timeout 30s bash -c 'until docker exec mongodb mongo --eval "db.stats()" > /dev/null 2>&1; do sleep 1; done' || { echo "[ERROR] MongoDB failed to start"; exit 1; }
+              ${PHPUNIT_MONGODB} || { echo "[ERROR] Failed to start MongoDB"; exit 1; }
           fi
 
           if [ ! -z "${PHPUNIT_REDIS}" ]; then
             echo "[INFO] Start redis container"
             docker run -tid --rm --name redis --network phpunit-test \
-            ${PHPUNIT_REDIS}
-            echo "[INFO] Waiting for Redis to be ready..."
-            timeout 30s bash -c 'until docker exec redis redis-cli ping | grep -q PONG; do sleep 1; done' || { echo "[ERROR] Redis failed to start"; exit 1; }
+            ${PHPUNIT_REDIS} || { echo "[ERROR] Failed to start Redis"; exit 1; }
           fi
 
           if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
@@ -185,17 +184,13 @@ jobs:
           if [ ! -z "${PHPUNIT_MYSQL}" ]; then
             echo "[INFO] Start mysql container"
             docker run -tid --rm --name mysql --network phpunit-test -e MYSQL_ROOT_PASSWORD=${{ secrets.mysql_pass }} \
-            ${PHPUNIT_MYSQL}
-            echo "[INFO] Waiting for MySQL to be ready..."
-            timeout 30s bash -c 'until docker exec mysql mysqladmin ping -h "127.0.0.1" --silent; do sleep 1; done' || { echo "[ERROR] MySQL failed to start"; exit 1; }
+            ${PHPUNIT_MYSQL} || { echo "[ERROR] Failed to start MySQL"; exit 1; }
           fi
 
           if [ ! -z "${PHPUNIT_ELASTICSEARCH}" ]; then
             echo "[INFO] Start elasticsearch container"
             docker run -tid --rm --name elasticsearch --network phpunit-test -e "discovery.type=single-node" \
-            ${PHPUNIT_ELASTICSEARCH}
-            echo "[INFO] Waiting for Elasticsearch to be ready..."
-            timeout 30s bash -c 'until docker exec elasticsearch curl -s http://localhost:9200/_cluster/health | grep -q "green"; do sleep 1; done' || { echo "[ERROR] Elasticsearch failed to start"; exit 1; }
+            ${PHPUNIT_ELASTICSEARCH} || { echo "[ERROR] Failed to start Elasticsearch"; exit 1; }
           fi
 
           LEABANK_MOUNT_FILE=""
@@ -213,7 +208,7 @@ jobs:
 
           echo "[INFO] Execute phpunit tests"
           PHP_VERSION=$(docker run --rm  --entrypoint php "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" -v | awk '/^PHP/ {print $2}' | awk -F. '{print $1"."$2}')
-          timeout 30m docker run -t --rm --workdir /app --network phpunit-test \
+          docker run -t --rm --workdir /app --network phpunit-test \
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/clover:/opt/clover" \
               -v "$(pwd)/config-management:/config-management" \
@@ -221,7 +216,7 @@ jobs:
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
               "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" \
               /bin/bash -e -c "echo [INFO] Delete old PHP source.list && \
-              rm -vf /etc/apt/sources.list.d/php.list || true && \
+              rm -vf /etc/apt/sources.list.d/php.list && \
               curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg && \
               echo deb '[arch=amd64 signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list && \
               echo [INFO] Install PHP testing tools && \
@@ -233,10 +228,11 @@ jobs:
                       --log-junit /opt/jreport/jreport.xml \
                       --coverage-clover /opt/clover/clover.xml \
                       --coverage-text
-                  " || { echo "[ERROR] PHPUnit tests failed or timed out"; exit 1; }
+                  "
 
       - name: Sonar Scanner Execution
         run: |
+          set -e
           docker run --rm --workdir "/app" \
               -v "$(pwd)/:/app/" \
               -v "$(pwd)/jreport:/opt/jreport" \
