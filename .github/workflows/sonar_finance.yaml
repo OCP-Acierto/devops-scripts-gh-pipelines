@@ -229,19 +229,36 @@ jobs:
           }
 
           echo "[INFO] Running PHPUnit tests"
-          docker exec -t phpunit-container /bin/bash -e -c "echo [INFO] Delete old PHP source.list && \
-              rm -vf /etc/apt/sources.list.d/php.list && \
-              curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg && \
-              echo deb '[arch=amd64 signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list && \
-              echo [INFO] Install PHP testing tools && \
-              apt-get update && apt-get -qq install -y php${PHP_VERSION}-xdebug php${PHP_VERSION}-mongodb && \
-              echo [INFO] Copy config /config-management/${PHPUNIT_CONFIG_PATH} && \
-              cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing && \
+          docker exec -t phpunit-container /bin/bash -e -c "
+              echo '[DEBUG] Checking PHP version';
+              php -v;
+
+              echo '[DEBUG] Checking composer installation';
+              composer --version || echo '[WARNING] Composer not installed';
+
+              echo '[DEBUG] Removing old PHP source.list';
+              rm -vf /etc/apt/sources.list.d/php.list;
+
+              echo '[DEBUG] Adding new PHP source.list';
+              curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg;
+              echo deb '[arch=amd64 signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list;
+
+              echo '[DEBUG] Running apt-get update';
+              apt-get update || { echo '[ERROR] apt-get update failed'; exit 1; }
+
+              echo '[DEBUG] Installing PHP testing tools';
+              apt-get -qq install -y php${PHP_VERSION}-xdebug php${PHP_VERSION}-mongodb || { echo '[ERROR] Failed to install PHP testing tools'; exit 1; }
+
+              echo '[DEBUG] Copying PHPUnit configuration';
+              cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing || { echo '[ERROR] Failed to copy PHPUnit configuration'; exit 1; }
+
+              echo '[DEBUG] Running PHPUnit';
               XDEBUG_MODE=coverage /app/vendor/bin/phpunit \
-                      --configuration /app/phpunit.xml \
-                      --log-junit /opt/jreport/jreport.xml \
-                      --coverage-clover /opt/clover/clover.xml \
-                      --coverage-text" || { 
+                  --configuration /app/phpunit.xml \
+                  --log-junit /opt/jreport/jreport.xml \
+                  --coverage-clover /opt/clover/clover.xml \
+                  --coverage-text || { echo '[ERROR] PHPUnit tests failed'; exit 1; }
+          " || { 
               echo "[ERROR] PHPUnit tests failed"; 
               docker logs phpunit-container; 
               docker stop phpunit-container; 
