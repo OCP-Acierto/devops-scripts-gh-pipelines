@@ -253,7 +253,20 @@ jobs:
 
               # Descargar y agregar la clave GPG
               echo '[DEBUG] Downloading PHP GPG key';
-              curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { echo '[ERROR] Failed to download PHP GPG key'; exit 1; }
+              # Verificar conectividad antes de descargar
+              echo '[DEBUG] Checking network connectivity';
+              curl -s https://google.com > /dev/null || { echo '[ERROR] No network connectivity'; exit 1; }
+
+              # Intentar descargar la clave GPG con timeout
+              echo '[DEBUG] Attempting to download PHP GPG key';
+              timeout 30s curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { 
+                  echo '[ERROR] Failed to download PHP GPG key. Retrying with wget...';
+                  apt-get update && apt-get install -y wget && \
+                  timeout 30s wget -qO- https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { 
+                      echo '[ERROR] Failed to download PHP GPG key with both curl and wget'; 
+                      exit 1; 
+                  }
+              }
 
               # Verificar que la clave GPG se haya agregado correctamente
               echo '[DEBUG] Verifying PHP GPG key';
