@@ -244,16 +244,28 @@ jobs:
 
               echo '[DEBUG] Configuring PHP repository';
               # Eliminar repositorios antiguos
+              echo '[DEBUG] Removing old PHP source.list';
               rm -vf /etc/apt/sources.list.d/php.list || echo '[INFO] No previous PHP source.list found';
 
               # Crear el directorio si no existe
+              echo '[DEBUG] Ensuring sources.list.d directory exists';
               mkdir -p /etc/apt/sources.list.d;
 
               # Descargar y agregar la clave GPG
+              echo '[DEBUG] Downloading PHP GPG key';
               curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { echo '[ERROR] Failed to download PHP GPG key'; exit 1; }
 
+              # Verificar que la clave GPG se haya agregado correctamente
+              echo '[DEBUG] Verifying PHP GPG key';
+              ls -l /usr/share/keyrings/php-sury.gpg || { echo '[ERROR] PHP GPG key not found'; exit 1; }
+
               # Agregar el repositorio de PHP
+              echo '[DEBUG] Adding PHP repository to sources.list.d';
               echo 'deb [signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list || { echo '[ERROR] Failed to add PHP source.list'; exit 1; }
+
+              # Imprimir el contenido del archivo php.list para verificar
+              echo '[DEBUG] Verifying PHP source.list content';
+              cat /etc/apt/sources.list.d/php.list || { echo '[ERROR] Failed to read PHP source.list'; exit 1; }
 
               # Actualizar los repositorios
               echo '[DEBUG] Running apt-get update';
