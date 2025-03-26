@@ -258,11 +258,16 @@ jobs:
               echo '[DEBUG] Ensuring gpg is installed';
               apt-get update && apt-get install -y gpg || { echo '[ERROR] Failed to install gpg'; exit 1; }
 
-              # Descargar y agregar la clave GPG usando wget
+              echo '[DEBUG] Verifying network connectivity';
+              ping -c 3 google.com || { echo '[ERROR] No network connectivity'; exit 1; }
+
               echo '[DEBUG] Downloading PHP GPG key with wget';
-              wget -q -O- https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { 
-                  echo '[ERROR] Failed to download PHP GPG key with wget'; 
-                  exit 1; 
+              wget --verbose -O- https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { 
+                  echo '[ERROR] Failed to download PHP GPG key with wget. Retrying with curl...';
+                  curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { 
+                      echo '[ERROR] Failed to download PHP GPG key with both wget and curl'; 
+                      exit 1; 
+                  }
               }
 
               # Verificar que la clave GPG se haya agregado correctamente
