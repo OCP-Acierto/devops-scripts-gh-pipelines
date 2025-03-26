@@ -229,7 +229,7 @@ jobs:
           }
 
           echo '[DEBUG] Verifying network connectivity';
-          curl -s https://google.com > /dev/null || { echo '[ERROR] No network connectivity'; exit 1; }
+          wget -q --spider https://google.com || { echo '[ERROR] No network connectivity'; exit 1; }
 
           echo "[INFO] Running PHPUnit tests"
           docker exec -t phpunit-container /bin/bash -e -c "
@@ -259,7 +259,7 @@ jobs:
               apt-get update && apt-get install -y gpg || { echo '[ERROR] Failed to install gpg'; exit 1; }
 
               echo '[DEBUG] Verifying network connectivity';
-              ping -c 3 google.com || { echo '[ERROR] No network connectivity'; exit 1; }
+              wget -q --spider https://google.com || { echo '[ERROR] No network connectivity'; exit 1; }
 
               echo '[DEBUG] Downloading PHP GPG key with wget';
               wget --verbose -O- https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { 
