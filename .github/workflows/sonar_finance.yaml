@@ -123,7 +123,6 @@ jobs:
 
       - name: Configure GCP Credentials
         run: |
-          set -e
           # IMPORTANT: SECRET MUST BE IN BASE64
           touch gcp_cdm_registry_sa_credentials.json
           echo "${{ secrets.gcp_cdm_registry_sa_credentials }}" | base64 -d > gcp_cdm_registry_sa_credentials.json
@@ -143,54 +142,44 @@ jobs:
 
       - name: Configure Docker Credentials
         run: |
-          set -e
           gcloud auth configure-docker --quiet
 
       - name: PHPUnit Execution
         if: ${{ env.PHPUNIT == 'true' }}
         run: |
-          set -e
           echo "[INFO] Create phpunit-test network"
-          docker network create --driver bridge phpunit-test || echo "[INFO] Network already exists"
+          docker network create --driver bridge phpunit-test
 
           if [ ! -z "${PHPUNIT_MONGODB}" ]; then
             echo "[INFO] Start mongodb container"
             docker run -tid --rm --name mongodb --network phpunit-test \
               -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
               -e MONGO_INITDB_ROOT_PASSWORD=secret  \
-              ${PHPUNIT_MONGODB} || { echo "[ERROR] Failed to start MongoDB"; exit 1; }
+              ${PHPUNIT_MONGODB}
           fi
 
           if [ ! -z "${PHPUNIT_REDIS}" ]; then
             echo "[INFO] Start redis container"
             docker run -tid --rm --name redis --network phpunit-test \
-            ${PHPUNIT_REDIS} || { echo "[ERROR] Failed to start Redis"; exit 1; }
+            ${PHPUNIT_REDIS}
           fi
 
           if [ ! -z "${PHPUNIT_RABBITMQ}" ]; then
             echo "[INFO] Start rabbitmq container"
-            docker run -tid --rm --name rabbitmq --network phpunit-test \
-              -e RABBITMQ_DEFAULT_USER=${{ secrets.rabbitmq_user }} \
-              -e RABBITMQ_DEFAULT_PASS=${{ secrets.rabbitmq_pass }} \
-              ${PHPUNIT_RABBITMQ}
-            echo "[INFO] Waiting for RabbitMQ to be ready..."
-            timeout 30s bash -c 'until docker logs rabbitmq 2>&1 | grep -q "Server startup complete"; do sleep 1; done' || { 
-              echo "[ERROR] RabbitMQ failed to start. Logs:"; 
-              docker logs rabbitmq; 
-              exit 1; 
-            }
+            docker run -tid --rm --name rabbitmq --network phpunit-test -e RABBITMQ_DEFAULT_USER=${{ secrets.rabbitmq_user }} -e RABBITMQ_DEFAULT_PASS=${{ secrets.rabbitmq_pass }} \
+            ${PHPUNIT_RABBITMQ}
           fi
 
           if [ ! -z "${PHPUNIT_MYSQL}" ]; then
             echo "[INFO] Start mysql container"
             docker run -tid --rm --name mysql --network phpunit-test -e MYSQL_ROOT_PASSWORD=${{ secrets.mysql_pass }} \
-            ${PHPUNIT_MYSQL} || { echo "[ERROR] Failed to start MySQL"; exit 1; }
+            ${PHPUNIT_MYSQL}
           fi
 
           if [ ! -z "${PHPUNIT_ELASTICSEARCH}" ]; then
             echo "[INFO] Start elasticsearch container"
             docker run -tid --rm --name elasticsearch --network phpunit-test -e "discovery.type=single-node" \
-            ${PHPUNIT_ELASTICSEARCH} || { echo "[ERROR] Failed to start Elasticsearch"; exit 1; }
+            ${PHPUNIT_ELASTICSEARCH}
           fi
 
           LEABANK_MOUNT_FILE=""
@@ -208,113 +197,31 @@ jobs:
 
           echo "[INFO] Execute phpunit tests"
           PHP_VERSION=$(docker run --rm  --entrypoint php "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" -v | awk '/^PHP/ {print $2}' | awk -F. '{print $1"."$2}')
-          echo "[INFO] Detected PHP version: ${PHP_VERSION}"
-
-          echo "[INFO] Starting PHPUnit container"
-          docker run -tid --name phpunit-container --workdir /app --network phpunit-test \
+          docker run -t --rm --workdir /app --network phpunit-test \
               -v "$(pwd)/jreport:/opt/jreport" \
               -v "$(pwd)/clover:/opt/clover" \
               -v "$(pwd)/config-management:/config-management" \
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key-public.pem:/app/storage/certificates/leabank-key-public.pem" } \
               ${LEABANK_MOUNT_FILE:+ -v "$(pwd)/leabank-key.pem:/app/storage/certificates/leabank-key.pem" } \
               "${PHPUNIT_GCP_REGISTRY}/${PHPUNIT_GCP_REPOSITORY}:${IMAGE_TAG}" \
-              tail -f /dev/null || { echo "[ERROR] Failed to start PHPUnit container"; exit 1; }
-
-          echo "[INFO] Verifying PHPUnit container is running"
-          timeout 30s bash -c 'until docker exec phpunit-container php -v > /dev/null 2>&1; do sleep 1; done' || { 
-              echo "[ERROR] PHPUnit container failed to start"; 
-              docker logs phpunit-container; 
-              docker stop phpunit-container; 
-              exit 1; 
-          }
-
-          echo '[DEBUG] Verifying network connectivity';
-          wget -q --spider https://google.com || { echo '[ERROR] No network connectivity'; exit 1; }
-
-          echo "[INFO] Running PHPUnit tests"
-          docker exec -t phpunit-container /bin/bash -e -c "
-              echo '[DEBUG] Checking PHP version';
-              php -v;
-
-              echo '[DEBUG] Installing Composer';
-              curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer || { echo '[ERROR] Failed to install Composer'; exit 1; }
-
-              echo '[DEBUG] Checking composer installation';
-              composer --version || { echo '[ERROR] Composer installation failed'; exit 1; }
-
-              echo '[DEBUG] Configuring PHP repository';
-              # Eliminar repositorios antiguos
-              echo '[DEBUG] Removing old PHP source.list';
-              rm -vf /etc/apt/sources.list.d/php.list || echo '[INFO] No previous PHP source.list found';
-
-              # Crear el directorio si no existe
-              echo '[DEBUG] Ensuring sources.list.d directory exists';
-              mkdir -p /etc/apt/sources.list.d;
-
-              # Instalar wget si no está disponible
-              echo '[DEBUG] Ensuring wget is installed';
-              apt-get update && apt-get install -y wget || { echo '[ERROR] Failed to install wget'; exit 1; }
-
-              echo '[DEBUG] Ensuring gpg is installed';
-              apt-get update && apt-get install -y gpg || { echo '[ERROR] Failed to install gpg'; exit 1; }
-
-              echo '[DEBUG] Verifying network connectivity';
-              wget -q --spider https://google.com || { echo '[ERROR] No network connectivity'; exit 1; }
-
-              echo '[DEBUG] Downloading PHP GPG key with wget';
-              # Eliminar el archivo existente si ya está presente
-              [ -f /usr/share/keyrings/php-sury.gpg ] && rm -f /usr/share/keyrings/php-sury.gpg
-
-              # Descargar y sobrescribir automáticamente
-              wget -q -O /usr/share/keyrings/php-sury.gpg https://packages.sury.org/php/apt.gpg || { 
-                  echo '[ERROR] Failed to download PHP GPG key with wget. Retrying with curl...';
-                  curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { 
-                      echo '[ERROR] Failed to download PHP GPG key with both wget and curl'; 
-                      exit 1; 
-                  }
-              }
-
-              # Verificar que la clave GPG se haya agregado correctamente
-              echo '[DEBUG] Verifying PHP GPG key';
-              ls -l /usr/share/keyrings/php-sury.gpg || { echo '[ERROR] PHP GPG key not found'; exit 1; }
-
-              # Agregar el repositorio de PHP
-              echo '[DEBUG] Adding PHP repository to sources.list.d';
-              echo 'deb [signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list || { echo '[ERROR] Failed to add PHP source.list'; exit 1; }
-
-              # Imprimir el contenido del archivo php.list para verificar
-              echo '[DEBUG] Verifying PHP source.list content';
-              cat /etc/apt/sources.list.d/php.list || { echo '[ERROR] Failed to read PHP source.list'; exit 1; }
-
-              # Actualizar los repositorios
-              echo '[DEBUG] Running apt-get update';
-              apt-get update --allow-releaseinfo-change || { echo '[ERROR] apt-get update failed'; exit 1; }
-
-              echo '[DEBUG] Installing PHP testing tools';
-              apt-get -qq install -y php${PHP_VERSION}-xdebug php${PHP_VERSION}-mongodb || { echo '[ERROR] Failed to install PHP testing tools'; exit 1; }
-
-              echo '[DEBUG] Copying PHPUnit configuration';
-              cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing || { echo '[ERROR] Failed to copy PHPUnit configuration'; exit 1; }
-
-              echo '[DEBUG] Running PHPUnit';
+              /bin/bash -e -c "echo [INFO] Delete old PHP source.list and GPG && \
+              rm -vf /etc/apt/sources.list.d/php.list && \
+              rm -vf /usr/share/keyrings/php-sury.gpg
+              curl -s https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg && \
+              echo deb '[arch=amd64 signed-by=/usr/share/keyrings/php-sury.gpg] https://packages.sury.org/php/ bullseye main' > /etc/apt/sources.list.d/php.list && \
+              echo [INFO] Install PHP testing tools && \
+              apt-get update && apt-get -qq install -y php${PHP_VERSION}-xdebug php${PHP_VERSION}-mongodb && \
+              echo [INFO] Copy config /config-management/${PHPUNIT_CONFIG_PATH} && \
+              cat /config-management/${PHPUNIT_CONFIG_PATH} > /app/.env.testing && \
               XDEBUG_MODE=coverage /app/vendor/bin/phpunit \
-                  --configuration /app/phpunit.xml \
-                  --log-junit /opt/jreport/jreport.xml \
-                  --coverage-clover /opt/clover/clover.xml \
-                  --coverage-text || { echo '[ERROR] PHPUnit tests failed'; exit 1; }
-          " || { 
-              echo "[ERROR] PHPUnit tests failed"; 
-              docker logs phpunit-container; 
-              docker stop phpunit-container; 
-              exit 1; 
-          }
-
-          echo "[INFO] Stopping PHPUnit container"
-          docker stop phpunit-container
+                      --configuration /app/phpunit.xml \
+                      --log-junit /opt/jreport/jreport.xml \
+                      --coverage-clover /opt/clover/clover.xml \
+                      --coverage-text
+                  "
 
       - name: Sonar Scanner Execution
         run: |
-          set -e
           docker run --rm --workdir "/app" \
               -v "$(pwd)/:/app/" \
               -v "$(pwd)/jreport:/opt/jreport" \
