@@ -262,7 +262,11 @@ jobs:
               wget -q --spider https://google.com || { echo '[ERROR] No network connectivity'; exit 1; }
 
               echo '[DEBUG] Downloading PHP GPG key with wget';
-              wget --verbose -O- https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { 
+              # Eliminar el archivo existente si ya está presente
+              [ -f /usr/share/keyrings/php-sury.gpg ] && rm -f /usr/share/keyrings/php-sury.gpg
+
+              # Descargar y sobrescribir automáticamente
+              wget -q -O /usr/share/keyrings/php-sury.gpg https://packages.sury.org/php/apt.gpg || { 
                   echo '[ERROR] Failed to download PHP GPG key with wget. Retrying with curl...';
                   curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php-sury.gpg || { 
                       echo '[ERROR] Failed to download PHP GPG key with both wget and curl'; 
