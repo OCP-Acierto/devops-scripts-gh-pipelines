@@ -96,10 +96,12 @@ jobs:
           aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
           kubectl version --output json | jq '.serverVersion.gitVersion'
 
-      - name: Inspeccionar kubeconfig
-        run: |
-          echo "Contenido del kubeconfig:"
-          cat ~/.kube/config
+      - name: Ver contexto actual
+        run: kubectl config current-context
+
+      - name: Ver nodos
+        run: kubectl --context arn:aws:eks:eu-west-1:164620328837:cluster/scaramanga get nodes
+
 
 
       - name: Check that Docker image is pushed to ECR Registry
