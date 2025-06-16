@@ -96,6 +96,12 @@ jobs:
           aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
           kubectl version --output json | jq '.serverVersion.gitVersion'
 
+      - name: Inspeccionar kubeconfig
+        run: |
+          echo "Contenido del kubeconfig:"
+          cat ~/.kube/config
+
+
       - name: Check that Docker image is pushed to ECR Registry
         id: docker-image-tag
         run: |
@@ -131,7 +137,7 @@ jobs:
 
       - name: Update Configmap
         run: |
-        
+
           aws sts get-caller-identity
           touch env_file
           touch env_file_k8s
