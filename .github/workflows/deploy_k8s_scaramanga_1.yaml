@@ -129,18 +129,36 @@ jobs:
 
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
 
-      - name: Debug kubeconfig before Configmap
+      - name: Update Configmap
         run: |
-          kubectl get nodes
-          echo "Kubeconfig:"
-          cat ~/.kube/config || echo "No kubeconfig"
-          echo "Env file:"
+          touch env_file
+          touch env_file_k8s
+
+          FILTER="Key=name,Values=${DEPLOY_ENV}/${PROJECT_CODE}/"
+          for secret in $(aws secretsmanager list-secrets --filters ${FILTER} --output json | jq .SecretList[].Name -r); do
+            echo "[INFO] Get Secret vaule for ${env_name[2]^^}"
+            value=$(aws secretsmanager get-secret-value --secret-id "${secret}" --output json | jq .SecretString -r)
+            IFS='/' read -r -a env_name <<< "$secret"
+            echo "${env_name[2]^^}='${value}'" >> env_file
+          done
+
+          set -a
+          source env_file
+          set +a
+
+          echo "[INFO] Create Configmap with envfile ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env"
+          envsubst < ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env > env_file_k8s
+
+          echo "DEBUG env_file_k8s:"
           cat env_file_k8s
 
-      - name: Refresh kubeconfig before Configmap
-        run: |
           aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
           kubectl get nodes
+
+          kubectl create configmap "${PROJECT_CODE}-env" \
+              --from-literal=env="$(cat env_file_k8s)" \
+              -o yaml --dry-run=client \
+          | kubectl apply -f -
 
       - name: Update Configmap
         run: |
