@@ -144,13 +144,8 @@ jobs:
             echo "${env_name[2]^^}='${value}'" >> env_file
           done
 
-          export $(cat env_file | xargs)
-          echo "[INFO] Create Configmap with envfile ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env"
-          envsubst < ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env > env_file_k8s
+          env -i $(cat env_file | xargs) envsubst < ./config/${DEPLOY_ENV}/${PROJECT_CODE}/.env > env_file_k8s
 
-          aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
-          kubectl version --output json | jq '.serverVersion.gitVersion'
-          
           kubectl create configmap "${PROJECT_CODE}-env" \
               --from-literal=env="$(cat env_file_k8s)" \
               -o yaml --dry-run=client \
