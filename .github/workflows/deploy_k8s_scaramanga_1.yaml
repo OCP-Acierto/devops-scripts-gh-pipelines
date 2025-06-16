@@ -128,13 +128,17 @@ jobs:
           fi
 
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-          
-      - name: Debug AWS credentials and kubectl
+
+      - name: Debug kubeconfig before Configmap
         run: |
-          echo "ACCOUNT_ID=${ACCOUNT_ID}"
-          echo "EKS_CLUSTER_NAME=${EKS_CLUSTER_NAME}"
-          echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
-          aws sts get-caller-identity
+          kubectl get nodes
+          echo "Kubeconfig:"
+          cat ~/.kube/config || echo "No kubeconfig"
+          echo "Env file:"
+          cat env_file_k8s
+
+      - name: Refresh kubeconfig before Configmap
+        run: |
           aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
           kubectl get nodes
 
