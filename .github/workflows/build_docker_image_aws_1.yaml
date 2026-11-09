@@ -6,6 +6,11 @@ on:
         default: 'latest'
         required: true
         type: string
+      push:
+        description: "false = solo build (validar la PR), sin subir nada al ECR"
+        default: true
+        required: false
+        type: boolean
       aws_repository:
         required: true
         type: string
@@ -168,7 +173,7 @@ jobs:
             --file ${DOCKER_FILE} ${CONTEXT}.
 
       - name: Push image to AWS ECR PROD
-        if: ${{ env.ACCOUNT_ID_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_PROD != '' && inputs.push }}
         run: |
           PROJECT_VERSION="${{ env.PROJECT_VERSION }}"
           if [ -n "$PROJECT_VERSION" ]; then
@@ -190,7 +195,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push image to AWS ECR LAB
-        if: ${{ env.ACCOUNT_ID_LAB != '' }}
+        if: ${{ env.ACCOUNT_ID_LAB != '' && inputs.push }}
         run: |
           PROJECT_VERSION="${{ env.PROJECT_VERSION }}"
           if [ -n "$PROJECT_VERSION" ]; then
@@ -212,7 +217,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push image to AWS ECR STAGE
-        if: ${{ env.ACCOUNT_ID_STAGE != '' }}
+        if: ${{ env.ACCOUNT_ID_STAGE != '' && inputs.push }}
         run: |
           PROJECT_VERSION="${{ env.PROJECT_VERSION }}"
           if [ -n "$PROJECT_VERSION" ]; then
@@ -234,7 +239,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push image to AWS ECR NON-PROD
-        if: ${{ env.ACCOUNT_ID_NON_PROD != '' }}
+        if: ${{ env.ACCOUNT_ID_NON_PROD != '' && inputs.push }}
         run: |
           PROJECT_VERSION="${{ env.PROJECT_VERSION }}"
           if [ -n "$PROJECT_VERSION" ]; then

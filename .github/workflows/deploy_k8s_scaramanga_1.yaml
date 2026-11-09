@@ -98,36 +98,47 @@ jobs:
 
       - name: Check that Docker image is pushed to ECR Registry
         id: docker-image-tag
+        shell: bash
         run: |
-          if [ "${ECR_REPOSITORY}" != "" ]; then
-            REPOSITORY_NAME=${ECR_REPOSITORY}
-          else
-            REPOSITORY_NAME=${PROJECT_CODE}
-          fi
+          set -euo pipefail
+          REPOSITORY_NAME="${ECR_REPOSITORY:-${PROJECT_CODE}}"
+          SHA_REGEX='^[0-9a-f]{40}$'
 
-          if [ "${MANUAL_IMAGE_TAG}" != "" ]; then
-            IMAGE_TAG=${MANUAL_IMAGE_TAG}
+          # Comprobación EXACTA del tag (antes era un grep por substring sobre list-images)
+          image_exists() {
+            aws ecr describe-images --repository-name "${REPOSITORY_NAME}" \
+              --image-ids imageTag="$1" >/dev/null 2>&1
+          }
+
+          if [ -n "${MANUAL_IMAGE_TAG}" ]; then
+            IMAGE_TAG="${MANUAL_IMAGE_TAG}"
             echo "[INFO] Search Image with MANUAL tag ${IMAGE_TAG} in repository ${REPOSITORY_NAME}"
-            if [ "$(aws ecr list-images --repository-name "${REPOSITORY_NAME}" | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
-              echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment"
-            else
-              echo "[INFO] Docker Image with tag ${IMAGE_TAG} does NOT exist!, exit deployment"
+            if ! image_exists "${IMAGE_TAG}"; then
+              echo "::error::Docker Image with tag ${IMAGE_TAG} does NOT exist in ${REPOSITORY_NAME}, exit deployment"
               exit 1
             fi
           else
-            IMAGE_TAG=${LAST_IMAGE_TAG}
+            IMAGE_TAG="${LAST_IMAGE_TAG}"
             echo "[INFO] Search Image with LAST tag ${IMAGE_TAG} in repository ${REPOSITORY_NAME}"
-            if [ "$(aws ecr list-images --repository-name "${REPOSITORY_NAME}" | grep "${IMAGE_TAG}" -c)" -ge 1 ]; then
-              echo "[INFO] Docker Image with tag ${IMAGE_TAG} exist!, continue deployment"
-            else
-              echo "[INFO] Docker Image with tag ${IMAGE_TAG} doesn't exist, falling back to last available IMAGE";
-              IMAGE_TAG=$(aws ecr describe-images --repository-name "${REPOSITORY_NAME}" \
-                --query 'sort_by(imageDetails,& imagePushedAt)[*]' | jq .[-1].imageTags[] -r | grep -v 'latest')
-              echo "[INFO] Using image TAG ${IMAGE_TAG}"
+            if ! image_exists "${IMAGE_TAG}"; then
+              # Monorepo: el último commit de master puede ser de OTRA app. Se usa la imagen
+              # más reciente que tenga un tag SHA (ignora latest, versiones e imágenes sin tag).
+              echo "[INFO] Docker Image with tag ${IMAGE_TAG} doesn't exist, falling back to last image with a commit-SHA tag"
+              IMAGE_TAG=$(aws ecr describe-images --repository-name "${REPOSITORY_NAME}" --output json \
+                | jq -r --arg re "${SHA_REGEX}" '
+                    [ .imageDetails[] | select(any(.imageTags[]?; test($re))) ]
+                    | sort_by(.imagePushedAt) | last
+                    | [ .imageTags[]? | select(test($re)) ] | first // empty')
+              if [ -z "${IMAGE_TAG}" ]; then
+                echo "::error::No image with a commit-SHA tag found in ${REPOSITORY_NAME}"
+                exit 1
+              fi
             fi
           fi
 
-          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "[INFO] Using image TAG ${IMAGE_TAG}"
+          echo "### Imagen desplegada: \`${REPOSITORY_NAME}:${IMAGE_TAG}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Update Configmap
         run: |
