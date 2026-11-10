@@ -1,0 +1,149 @@
+name: Run K8s Job
+# Lanza un Job de k8s definido en devops-scripts-k8s/<deploy_env>/projects/<project_code>/<job_file>,
+# espera a que termine, muestra sus logs y falla si el Job falla.
+# Sustituye __VERSION__ por image_tag (igual que deploy_k8s_deployment.yaml).
+# Si ya existe un Job con el mismo nombre, lo borra antes (los Jobs no se pueden re-aplicar).
+on:
+  workflow_call:
+    inputs:
+      project_code:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      deploy_env:
+        required: true
+        type: string
+      job_file:
+        default: 'job-db-update.yaml'
+        required: false
+        type: string
+      job_timeout_seconds:
+        default: 1800
+        required: false
+        type: number
+      k8s_cluster_zone:
+        default: europe-west1-b
+        required: true
+        type: string
+      gcp_project:
+        required: false
+        type: string
+      gke_cluster_name:
+        required: true
+        type: string
+    secrets:
+      gcp_adm_k8s_sa_credentials:
+        required: true
+      gh_pull_repo_pat:
+        required: true
+env:
+  PROJECT_CODE: ${{ inputs.project_code }}
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  DEPLOY_ENV: ${{ inputs.deploy_env }}
+  JOB_FILE: ${{ inputs.job_file }}
+  JOB_TIMEOUT_SECONDS: ${{ inputs.job_timeout_seconds }}
+  K8S_CLUSTER_ZONE: ${{ inputs.k8s_cluster_zone }}
+  GCP_PROJECT: ${{ inputs.gcp_project }}
+  GKE_CLUSTER_NAME: ${{ inputs.gke_cluster_name }}
+  KUBECTL_VERSION: v1.26.0
+jobs:
+  job:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kubernetes repo
+        uses: actions/checkout@v4
+        with:
+          repository: OCP-Acierto/devops-scripts-k8s
+          token: ${{ secrets.gh_pull_repo_pat }}
+          path: k8s
+
+      - name: Install Kubectl ${{ env.KUBECTL_VERSION }}
+        run: |
+          sudo rm -fv  /usr/local/bin/kubectl
+          curl -sLO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+          sudo chmod +x kubectl
+          sudo mv -v kubectl /usr/local/bin/kubectl
+          kubectl version --output json | jq '.clientVersion.gitVersion'
+
+      - name: Configure GCP Credentials
+        run: |
+          # IMPORTANT: SECRET MUST BE IN BASE64
+          touch gcp_adm_k8s_sa_credentials.json
+          echo "${{ secrets.gcp_adm_k8s_sa_credentials }}" | base64 -d > gcp_adm_k8s_sa_credentials.json
+
+          client_email=$(cat gcp_adm_k8s_sa_credentials.json | jq .client_email  -r)
+          project_id=$(cat gcp_adm_k8s_sa_credentials.json | jq .project_id  -r)
+
+          echo "[INFO] Get access to Gcloud ${project_id}"
+
+          gcloud auth activate-service-account "${client_email}" \
+            --key-file=gcp_adm_k8s_sa_credentials.json \
+            --project="${project_id}"
+
+          echo "[INFO] Use project $(gcloud config list --format=json | jq .core.project -r)"
+
+          rm -Rf gcp_adm_k8s_sa_credentials.json
+
+          echo "[INFO] Add Repository for cloud.google"
+          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg |
+            sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+
+          DEB_URL="[arch=amd64 signed-by=/usr/share/keyrings/cloud.google.gpg]"
+          echo "deb ${DEB_URL} https://packages.cloud.google.com/apt cloud-sdk main " |
+            sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+          echo "[INFO] Install required plugin"
+          sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+
+          echo "[INFO] Set env variable"
+          export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+
+      - name: Configure GKE Credentials
+        run: |
+          gcloud container clusters get-credentials "${GKE_CLUSTER_NAME}" \
+              --zone "${K8S_CLUSTER_ZONE}" --project "${GCP_PROJECT}"
+
+      - name: Run Job
+        run: |
+          set -euo pipefail
+          JOB_PATH="./k8s/${DEPLOY_ENV}/projects/${PROJECT_CODE}/${JOB_FILE}"
+          if [ ! -f "${JOB_PATH}" ]; then
+            echo "[ERROR] No existe ${JOB_PATH}"
+            exit 1
+          fi
+
+          sed "s/__VERSION__/${IMAGE_TAG}/" "${JOB_PATH}" > job.yaml
+          JOB_NAME=$(kubectl create --dry-run=client -f job.yaml -o jsonpath='{.metadata.name}')
+          JOB_NS=$(kubectl create --dry-run=client -f job.yaml -o jsonpath='{.metadata.namespace}')
+          JOB_NS="${JOB_NS:-default}"
+
+          echo "[INFO] Borrando Job anterior ${JOB_NS}/${JOB_NAME} si existe"
+          kubectl delete job "${JOB_NAME}" -n "${JOB_NS}" --ignore-not-found --wait=true
+
+          echo "[INFO] Lanzando Job ${JOB_NS}/${JOB_NAME} con imagen ${IMAGE_TAG}"
+          kubectl apply -f job.yaml
+
+          echo "[INFO] Esperando a que termine (max ${JOB_TIMEOUT_SECONDS}s)"
+          RESULT=""
+          ELAPSED=0
+          while [ "${ELAPSED}" -lt "${JOB_TIMEOUT_SECONDS}" ]; do
+            CONDITIONS=$(kubectl get job "${JOB_NAME}" -n "${JOB_NS}" \
+              -o jsonpath='{.status.conditions[?(@.status=="True")].type}')
+            if echo "${CONDITIONS}" | grep -qw Complete; then RESULT=Complete; break; fi
+            if echo "${CONDITIONS}" | grep -qw Failed;   then RESULT=Failed;   break; fi
+            sleep 10
+            ELAPSED=$((ELAPSED + 10))
+          done
+
+          echo "[INFO] Logs del Job:"
+          kubectl logs "job/${JOB_NAME}" -n "${JOB_NS}" --all-containers --tail=-1 || true
+          kubectl get pods -n "${JOB_NS}" -l "job-name=${JOB_NAME}" || true
+
+          case "${RESULT}" in
+            Complete) echo "[INFO] Job ${JOB_NAME} terminado OK" ;;
+            Failed)   echo "[ERROR] Job ${JOB_NAME} ha fallado"; exit 1 ;;
+            *)        echo "[ERROR] Job ${JOB_NAME} no ha terminado en ${JOB_TIMEOUT_SECONDS}s"; exit 1 ;;
+          esac
